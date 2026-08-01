@@ -7,6 +7,7 @@ import {
   IsDateString,
   IsEmail,
   IsEnum,
+  IsIn,
   IsOptional,
   IsString,
   Length,
@@ -19,6 +20,7 @@ import {
   IsSignatureImage,
 } from '../../../../shared/application/validators/brazilian-formats.validator';
 import { OccupancyType } from '../../domain/enums/occupancy-type';
+import { CONDO_UNITS } from '../../domain/value-objects/unit';
 import {
   ContactPersonDto,
   HouseholdMemberDto,
@@ -29,11 +31,19 @@ import {
 
 const MAX_COLLECTION_SIZE = 20;
 
-/** Payload of the "Cadastro de Morador" form. */
+/**
+ * Payload of the "Cadastro de Morador" form.
+ *
+ * `signedAt` is deliberately absent: the moment of the signature belongs to the
+ * server clock, so no client can choose or edit it.
+ */
 export class CreateResidentDto {
-  @ApiProperty({ example: 'A-101', description: 'Unidade/apartamento' })
-  @IsString()
-  @Length(1, 20)
+  @ApiProperty({
+    example: '101',
+    enum: CONDO_UNITS,
+    description: 'Unidade/apartamento existente no condomínio',
+  })
+  @IsIn(CONDO_UNITS)
   unit: string;
 
   @ApiProperty({ enum: OccupancyType, example: OccupancyType.Owner })
@@ -127,8 +137,4 @@ export class CreateResidentDto {
   })
   @IsSignatureImage()
   signature: string;
-
-  @ApiProperty({ example: '2024-01-20', description: 'Data da assinatura' })
-  @IsDateString()
-  signedAt: string;
 }

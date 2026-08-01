@@ -81,7 +81,7 @@ export class ResidentMapper {
       landlordPhone: snapshot.landlord?.phone ?? null,
       dataUsageConsent: snapshot.dataUsageConsent,
       signature: snapshot.signature,
-      signedAt: toIsoDate(snapshot.signedAt),
+      signedAt: snapshot.signedAt,
       householdMembers: snapshot.householdMembers,
       employees: snapshot.employees,
       vehicles: snapshot.vehicles,

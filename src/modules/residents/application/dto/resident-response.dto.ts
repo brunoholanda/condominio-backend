@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 
 import { OccupancyType } from '../../domain/enums/occupancy-type';
 import {
@@ -64,7 +64,10 @@ export class ResidentResponseDto {
   @ApiProperty({ description: 'Assinatura manuscrita em data URL' })
   signature: string;
 
-  @ApiProperty({ example: '2024-01-20' })
+  @ApiProperty({
+    example: '2024-01-20T13:45:12.000Z',
+    description: 'Data e hora da assinatura, registradas pelo servidor',
+  })
   signedAt: string;
 
   @ApiProperty()
@@ -74,9 +77,16 @@ export class ResidentResponseDto {
   updatedAt: string;
 }
 
+/**
+ * A listagem existe para achar o cadastro, não para exibi-lo: mandar a
+ * assinatura de cada morador junto seria expor um dado pessoal que nenhuma
+ * coluna da tabela usa. Quem precisa dela busca o cadastro pelo id.
+ */
+export class ResidentListItemDto extends OmitType(ResidentResponseDto, ['signature'] as const) {}
+
 export class PaginatedResidentsResponseDto {
-  @ApiProperty({ type: [ResidentResponseDto] })
-  items: ResidentResponseDto[];
+  @ApiProperty({ type: [ResidentListItemDto] })
+  items: ResidentListItemDto[];
 
   @ApiProperty()
   total: number;

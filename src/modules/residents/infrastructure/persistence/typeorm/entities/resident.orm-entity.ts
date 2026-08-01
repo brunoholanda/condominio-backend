@@ -23,8 +23,8 @@ export class ResidentOrmEntity {
   @PrimaryColumn('uuid')
   id: string;
 
-  @Index('idx_residents_unit')
-  @Column({ name: 'unit', type: 'varchar', length: 20 })
+  @Index('idx_residents_unit', { unique: true })
+  @Column({ name: 'unit', type: 'varchar', length: 3 })
   unit: string;
 
   @Column({ name: 'occupancy_type', type: 'varchar', length: 10 })
@@ -71,8 +71,8 @@ export class ResidentOrmEntity {
   @Column({ name: 'signature', type: 'text' })
   signature: string;
 
-  @Column({ name: 'signed_at', type: 'date' })
-  signedAt: string;
+  @Column({ name: 'signed_at', type: 'timestamptz' })
+  signedAt: Date;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

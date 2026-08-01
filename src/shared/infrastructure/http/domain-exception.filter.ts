@@ -7,6 +7,7 @@ import {
   DomainError,
   InvalidFieldError,
   ResourceConflictError,
+  ResourceExpiredError,
   ResourceNotFoundError,
 } from '../../domain/domain-error';
 
@@ -23,17 +24,29 @@ export class DomainExceptionFilter implements ExceptionFilter {
     const request = context.getRequest<Request>();
     const response = context.getResponse<Response>();
     const status = DomainExceptionFilter.resolveStatus(exception);
+    const path = DomainExceptionFilter.pathOf(request);
 
-    this.logger.warn(`${request.method} ${request.url} -> ${exception.name}: ${exception.message}`);
+    this.logger.warn(`${request.method} ${path} -> ${exception.name}: ${exception.message}`);
 
     response.status(status).json({
       statusCode: status,
       error: exception.name,
       message: exception.message,
       field: exception instanceof InvalidFieldError ? exception.field : undefined,
-      path: request.url,
+      path,
       timestamp: new Date().toISOString(),
     });
+  }
+
+  /**
+   * A query string carrega o termo de busca, que na listagem costuma ser um
+   * nome ou um CPF. Guardar isso em log seria tratar dado pessoal sem
+   * necessidade, então só a rota é registrada.
+   */
+  private static pathOf(request: Request): string {
+    const [path] = request.url.split('?');
+
+    return path ?? request.url;
   }
 
   private static resolveStatus(exception: DomainError): HttpStatus {
@@ -51,6 +64,10 @@ export class DomainExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof ResourceConflictError) {
       return HttpStatus.CONFLICT;
+    }
+
+    if (exception instanceof ResourceExpiredError) {
+      return HttpStatus.GONE;
     }
 
     return HttpStatus.UNPROCESSABLE_ENTITY;

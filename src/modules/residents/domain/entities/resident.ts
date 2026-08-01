@@ -14,6 +14,7 @@ import { EmailAddress } from '../../../../shared/domain/value-objects/email-addr
 import { PhoneNumber } from '../../../../shared/domain/value-objects/phone-number';
 import { SignatureImage } from '../../../../shared/domain/value-objects/signature-image';
 import { OccupancyType } from '../enums/occupancy-type';
+import { Unit } from '../value-objects/unit';
 import type { ContactPersonProps } from './contact-person';
 import { ContactPerson } from './contact-person';
 import type { HouseholdMemberProps } from './household-member';
@@ -44,7 +45,6 @@ export interface ResidentProps {
   pets?: PetProps[];
   dataUsageConsent: boolean;
   signature: string;
-  signedAt: Date | string;
 }
 
 /** Flat, primitive-only view of the aggregate, consumed by persistence and presentation. */
@@ -74,7 +74,7 @@ export interface ResidentSnapshot {
 
 interface ResidentState {
   id: string;
-  unit: string;
+  unit: Unit;
   occupancyType: OccupancyType;
   fullName: string;
   rg: string;
@@ -112,6 +112,9 @@ export class Resident {
     return new Resident({
       ...Resident.parse(props),
       id: randomUUID(),
+      // The signature is dated here, by the server clock: it records when the
+      // form was signed and is never taken from the client.
+      signedAt: now,
       createdAt: now,
       updatedAt: now,
     });
@@ -122,6 +125,7 @@ export class Resident {
     return new Resident({
       ...Resident.parse(snapshot),
       id: snapshot.id,
+      signedAt: snapshot.signedAt,
       createdAt: snapshot.createdAt,
       updatedAt: snapshot.updatedAt,
     });
@@ -132,6 +136,7 @@ export class Resident {
     return new Resident({
       ...Resident.parse(props),
       id: this.state.id,
+      signedAt: this.state.signedAt,
       createdAt: this.state.createdAt,
       updatedAt: new Date(),
     });
@@ -139,14 +144,14 @@ export class Resident {
 
   private static parse(
     props: ResidentProps,
-  ): Omit<ResidentState, 'id' | 'createdAt' | 'updatedAt'> {
+  ): Omit<ResidentState, 'id' | 'signedAt' | 'createdAt' | 'updatedAt'> {
     const occupancyType = requireEnum('tipo de ocupação', props.occupancyType, OccupancyType);
     const vehicles = (props.vehicles ?? []).map((vehicle) => Vehicle.create(vehicle));
 
     Resident.assertPlatesAreUnique(vehicles);
 
     return {
-      unit: requireText('unidade/apartamento', props.unit, { min: 1, max: 20 }).toUpperCase(),
+      unit: Unit.create(props.unit, 'unidade/apartamento'),
       occupancyType,
       fullName: requireText('nome completo', props.fullName, { min: 3, max: 150 }),
       rg: requireText('RG', props.rg, { min: 5, max: 20 }),
@@ -172,10 +177,6 @@ export class Resident {
         'É necessário autorizar o uso dos dados para concluir o cadastro.',
       ),
       signature: SignatureImage.create(props.signature),
-      signedAt: requireNotInFuture(
-        'data da assinatura',
-        requireDate('data da assinatura', props.signedAt),
-      ),
     };
   }
 
@@ -216,7 +217,7 @@ export class Resident {
     return this.state.id;
   }
 
-  get unit(): string {
+  get unit(): Unit {
     return this.state.unit;
   }
 
@@ -237,7 +238,7 @@ export class Resident {
 
     return {
       id: state.id,
-      unit: state.unit,
+      unit: state.unit.value,
       occupancyType: state.occupancyType,
       fullName: state.fullName,
       rg: state.rg,

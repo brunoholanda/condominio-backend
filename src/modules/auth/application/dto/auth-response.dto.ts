@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class AuthenticatedUserDto {
   @ApiProperty({ format: 'uuid' })
@@ -9,6 +9,12 @@ export class AuthenticatedUserDto {
 
   @ApiProperty()
   email: string;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'Somente dígitos. Nulo enquanto o operador não se identifica.',
+  })
+  cpf: string | null;
 }
 
 export class LoginResponseDto {

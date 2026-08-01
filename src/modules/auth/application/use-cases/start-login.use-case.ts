@@ -3,10 +3,9 @@ import { Injectable } from '@nestjs/common';
 import { AuthenticationError } from '../../../../shared/domain/domain-error';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { PasswordHasher } from '../../domain/services/password-hasher';
+import type { LoginChallengeDto } from '../dto/login-challenge.dto';
 import type { LoginDto } from '../dto/login.dto';
-import type { LoginResponseDto } from '../dto/auth-response.dto';
-import { AccessTokenService } from '../ports/access-token-service';
-import { UserPresenter } from '../presenters/user.presenter';
+import { LoginCodeIssuer } from '../services/login-code-issuer';
 
 /**
  * Hash of an impossible password, compared when the e-mail does not exist so that
@@ -14,15 +13,19 @@ import { UserPresenter } from '../presenters/user.presenter';
  */
 const DUMMY_HASH = '$2b$10$CwTycUXWue0Thq9StjUM0uJ8.dO0Q0mSPzn0Uc2CtQGkc3EEcQvhq';
 
+/**
+ * Primeira etapa: confere e-mail e senha e manda o código para a caixa da conta.
+ * Nenhum token é emitido aqui — a senha sozinha não abre a área restrita.
+ */
 @Injectable()
-export class LoginUseCase {
+export class StartLoginUseCase {
   constructor(
     private readonly users: UserRepository,
     private readonly passwordHasher: PasswordHasher,
-    private readonly accessTokens: AccessTokenService,
+    private readonly loginCodes: LoginCodeIssuer,
   ) {}
 
-  async execute({ email, password }: LoginDto): Promise<LoginResponseDto> {
+  async execute({ email, password }: LoginDto): Promise<LoginChallengeDto> {
     const user = await this.users.findByEmail(email.trim().toLowerCase());
     const matches = await this.passwordHasher.compare(password, user?.passwordHash ?? DUMMY_HASH);
 
@@ -30,16 +33,6 @@ export class LoginUseCase {
       throw new AuthenticationError('E-mail ou senha inválidos.');
     }
 
-    const { token, expiresInSeconds } = await this.accessTokens.sign({
-      sub: user.id,
-      email: user.email.value,
-      name: user.name,
-    });
-
-    return {
-      accessToken: token,
-      expiresIn: expiresInSeconds,
-      user: UserPresenter.toResponse(user),
-    };
+    return this.loginCodes.issueFor(user);
   }
 }

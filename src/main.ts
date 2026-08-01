@@ -8,6 +8,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
 import type { EnvironmentVariables } from './config/environment';
+import { NodeEnvironment } from './config/environment';
 import { DomainExceptionFilter } from './shared/infrastructure/http/domain-exception.filter';
 
 function parseOrigins(value: string): string[] {
@@ -26,7 +27,11 @@ async function bootstrap(): Promise<void> {
   // The default 100 kB limit would reject a form carrying the signature image.
   app.useBodyParser('json', { limit: '1mb' });
   app.setGlobalPrefix(apiPrefix);
-  app.enableCors({ origin: parseOrigins(config.get('CORS_ORIGINS', { infer: true })) });
+  app.enableCors({
+    origin: parseOrigins(config.get('CORS_ORIGINS', { infer: true })),
+    // The browser only sees the report file name when the header is exposed.
+    exposedHeaders: ['Content-Disposition'],
+  });
   app.useGlobalFilters(new DomainExceptionFilter());
   app.useGlobalPipes(
     new ValidationPipe({
@@ -37,16 +42,20 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Condomínio Porto Imperial - Cadastro de Moradores')
-    .setDescription('API para o formulário digital de cadastro de moradores.')
-    .setVersion('1.0.0')
-    .addBearerAuth()
-    .build();
+  // A documentação descreve rotas com dados pessoais e ainda oferece o "try it
+  // out": fora do desenvolvimento ela não sobe.
+  if (config.get('NODE_ENV', { infer: true }) !== NodeEnvironment.Production) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Condomínio Porto Imperial - Cadastro de Moradores')
+      .setDescription('API para o formulário digital de cadastro de moradores.')
+      .setVersion('1.0.0')
+      .addBearerAuth()
+      .build();
 
-  SwaggerModule.setup(`${apiPrefix}/docs`, app, () =>
-    SwaggerModule.createDocument(app, swaggerConfig),
-  );
+    SwaggerModule.setup(`${apiPrefix}/docs`, app, () =>
+      SwaggerModule.createDocument(app, swaggerConfig),
+    );
+  }
 
   await app.listen(port);
 

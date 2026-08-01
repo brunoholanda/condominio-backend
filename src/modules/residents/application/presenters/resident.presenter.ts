@@ -3,6 +3,7 @@ import { toIsoDate } from '../../../../shared/application/date-format';
 import type { Resident } from '../../domain/entities/resident';
 import type {
   PaginatedResidentsResponseDto,
+  ResidentListItemDto,
   ResidentResponseDto,
 } from '../dto/resident-response.dto';
 
@@ -14,17 +15,24 @@ export class ResidentPresenter {
     return {
       ...snapshot,
       movedInAt: toIsoDate(snapshot.movedInAt),
-      signedAt: toIsoDate(snapshot.signedAt),
+      signedAt: snapshot.signedAt.toISOString(),
       createdAt: snapshot.createdAt.toISOString(),
       updatedAt: snapshot.updatedAt.toISOString(),
       pets: snapshot.pets.map((pet) => ({ ...pet, breed: pet.breed ?? null })),
     };
   }
 
+  /** Mesmo contrato do detalhe, sem a assinatura: a lista não precisa dela. */
+  static toListItem(resident: Resident): ResidentListItemDto {
+    const { signature: _signature, ...item } = ResidentPresenter.toResponse(resident);
+
+    return item;
+  }
+
   static toPaginatedResponse(result: PaginatedResult<Resident>): PaginatedResidentsResponseDto {
     return {
       ...result,
-      items: result.items.map((resident) => ResidentPresenter.toResponse(resident)),
+      items: result.items.map((resident) => ResidentPresenter.toListItem(resident)),
     };
   }
 }

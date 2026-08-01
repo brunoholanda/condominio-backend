@@ -32,3 +32,10 @@ export class ResourceNotFoundError extends DomainError {}
 
 /** The operation conflicts with data that already exists. */
 export class ResourceConflictError extends DomainError {}
+
+/**
+ * O recurso existiu, mas acabou: prazo vencido, uso único já gasto, tentativas
+ * esgotadas. Diferente do 401, diz ao cliente que insistir não adianta — o
+ * caminho é recomeçar.
+ */
+export class ResourceExpiredError extends DomainError {}

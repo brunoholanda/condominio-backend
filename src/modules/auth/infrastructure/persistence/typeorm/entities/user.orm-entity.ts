@@ -15,6 +15,11 @@ export class UserOrmEntity {
   @Column({ name: 'password_hash', type: 'varchar', length: 255 })
   passwordHash: string;
 
+  /** Nulo enquanto o operador não se identifica na área restrita. */
+  @Index('idx_users_cpf', { unique: true })
+  @Column({ name: 'cpf', type: 'varchar', length: 11, nullable: true })
+  cpf: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 

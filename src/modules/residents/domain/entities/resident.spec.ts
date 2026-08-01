@@ -13,7 +13,7 @@ function makeSignatureOf(bytes: number): string {
 
 function makeProps(overrides: Partial<ResidentProps> = {}): ResidentProps {
   return {
-    unit: 'a-101',
+    unit: ' 101 ',
     occupancyType: OccupancyType.Owner,
     fullName: 'Carlos   Eduardo Pereira',
     rg: '12.345.678-9',
@@ -28,7 +28,6 @@ function makeProps(overrides: Partial<ResidentProps> = {}): ResidentProps {
     pets: [{ name: 'Rex', species: PetSpecies.Dog, breed: 'Labrador', color: 'Caramelo' }],
     dataUsageConsent: true,
     signature: SIGNATURE,
-    signedAt: '2024-01-20',
     ...overrides,
   };
 }
@@ -37,7 +36,7 @@ describe('Resident', () => {
   it('normalizes the data typed on the form', () => {
     const snapshot = Resident.create(makeProps()).toSnapshot();
 
-    expect(snapshot.unit).toBe('A-101');
+    expect(snapshot.unit).toBe('101');
     expect(snapshot.fullName).toBe('Carlos Eduardo Pereira');
     expect(snapshot.cpf).toBe('52998224725');
     expect(snapshot.email).toBe('carlos@exemplo.com.br');
@@ -73,6 +72,12 @@ describe('Resident', () => {
     expect(() => Resident.create(props)).toThrow(InvalidFieldError);
   });
 
+  it('rejects a unit that does not exist in the condo', () => {
+    expect(() => Resident.create(makeProps({ unit: '118' }))).toThrow(InvalidFieldError);
+    expect(() => Resident.create(makeProps({ unit: '501' }))).toThrow(InvalidFieldError);
+    expect(() => Resident.create(makeProps({ unit: 'A-101' }))).toThrow(InvalidFieldError);
+  });
+
   it('rejects an invalid CPF', () => {
     expect(() => Resident.create(makeProps({ cpf: '111.111.111-11' }))).toThrow(InvalidFieldError);
   });
@@ -88,12 +93,21 @@ describe('Resident', () => {
     expect(() => Resident.create(props)).toThrow(BusinessRuleError);
   });
 
-  it('keeps identity and creation date when data is replaced', () => {
+  it('dates the signature with the server clock', () => {
+    const before = Date.now();
+    const { signedAt } = Resident.create(makeProps()).toSnapshot();
+
+    expect(signedAt.getTime()).toBeGreaterThanOrEqual(before);
+    expect(signedAt.getTime()).toBeLessThanOrEqual(Date.now());
+  });
+
+  it('keeps identity, creation and signature dates when data is replaced', () => {
     const resident = Resident.create(makeProps());
-    const updated = resident.withData(makeProps({ unit: 'B-202' }));
+    const updated = resident.withData(makeProps({ unit: '202' }));
 
     expect(updated.id).toBe(resident.id);
     expect(updated.toSnapshot().createdAt).toEqual(resident.toSnapshot().createdAt);
-    expect(updated.unit).toBe('B-202');
+    expect(updated.toSnapshot().signedAt).toEqual(resident.toSnapshot().signedAt);
+    expect(updated.unit.value).toBe('202');
   });
 });

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import type { EnvironmentVariables } from './config/environment';
@@ -7,6 +8,7 @@ import { validateEnvironment } from './config/environment';
 import { typeOrmOptionsFromConfig } from './database/typeorm-options.factory';
 import { AuthModule } from './modules/auth/auth.module';
 import { ResidentsModule } from './modules/residents/residents.module';
+import { AuditAccessInterceptor } from './shared/infrastructure/http/audit-access.interceptor';
 
 @Module({
   imports: [
@@ -23,5 +25,7 @@ import { ResidentsModule } from './modules/residents/residents.module';
     AuthModule,
     ResidentsModule,
   ],
+  // Registra a trilha de acesso para toda rota marcada com @AuditAccess().
+  providers: [{ provide: APP_INTERCEPTOR, useClass: AuditAccessInterceptor }],
 })
 export class AppModule {}

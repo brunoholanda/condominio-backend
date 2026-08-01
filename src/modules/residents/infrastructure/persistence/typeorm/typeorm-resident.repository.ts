@@ -7,7 +7,11 @@ import type { PaginatedResult } from '../../../../../shared/application/paginate
 import { buildPaginatedResult } from '../../../../../shared/application/paginated-result';
 import { onlyDigits } from '../../../../../shared/domain/guards';
 import type { Resident } from '../../../domain/entities/resident';
-import type { ResidentQuery } from '../../../domain/repositories/resident.repository';
+import type {
+  ResidentFilters,
+  ResidentQuery,
+  ResidentsTally,
+} from '../../../domain/repositories/resident.repository';
 import { ResidentRepository } from '../../../domain/repositories/resident.repository';
 import { HouseholdMemberOrmEntity } from './entities/household-member.orm-entity';
 import { PetOrmEntity } from './entities/pet.orm-entity';
@@ -57,19 +61,9 @@ export class TypeormResidentRepository extends ResidentRepository {
   }
 
   async findMany(query: ResidentQuery): Promise<PaginatedResult<Resident>> {
-    const builder = this.dataSource
-      .getRepository(ResidentOrmEntity)
-      .createQueryBuilder('resident')
-      .leftJoinAndSelect('resident.householdMembers', 'householdMembers')
-      .leftJoinAndSelect('resident.employees', 'employees')
-      .leftJoinAndSelect('resident.vehicles', 'vehicles')
-      .leftJoinAndSelect('resident.pets', 'pets')
-      .orderBy('resident.unit', 'ASC')
-      .addOrderBy('resident.fullName', 'ASC')
+    const builder = this.createFilteredQuery(query)
       .skip((query.page - 1) * query.limit)
       .take(query.limit);
-
-    TypeormResidentRepository.applyFilters(builder, query);
 
     const [rows, total] = await builder.getManyAndCount();
 
@@ -78,6 +72,12 @@ export class TypeormResidentRepository extends ResidentRepository {
       total,
       query,
     );
+  }
+
+  async findAll(filters: ResidentFilters): Promise<Resident[]> {
+    const rows = await this.createFilteredQuery(filters).getMany();
+
+    return rows.map((row) => ResidentMapper.toDomain(row));
   }
 
   async findIdByCpf(cpf: string): Promise<string | null> {
@@ -90,6 +90,30 @@ export class TypeormResidentRepository extends ResidentRepository {
     return row?.id ?? null;
   }
 
+  async findIdByUnit(unit: string): Promise<string | null> {
+    const row = await this.dataSource.getRepository(ResidentOrmEntity).findOne({
+      where: { unit },
+      select: { id: true },
+      loadEagerRelations: false,
+    });
+
+    return row?.id ?? null;
+  }
+
+  async tally(): Promise<ResidentsTally> {
+    const [rows, householdMembers] = await Promise.all([
+      this.dataSource.getRepository(ResidentOrmEntity).find({
+        select: { unit: true },
+        order: { unit: 'ASC' },
+        loadEagerRelations: false,
+      }),
+      this.dataSource.getRepository(HouseholdMemberOrmEntity).count(),
+    ]);
+    const registeredUnits = rows.map((row) => row.unit);
+
+    return { registeredUnits, totalPeople: registeredUnits.length + householdMembers };
+  }
+
   async deleteById(id: string): Promise<void> {
     await this.dataSource.getRepository(ResidentOrmEntity).delete({ id });
   }
@@ -100,12 +124,28 @@ export class TypeormResidentRepository extends ResidentRepository {
     }
   }
 
+  private createFilteredQuery(filters: ResidentFilters): SelectQueryBuilder<ResidentOrmEntity> {
+    const builder = this.dataSource
+      .getRepository(ResidentOrmEntity)
+      .createQueryBuilder('resident')
+      .leftJoinAndSelect('resident.householdMembers', 'householdMembers')
+      .leftJoinAndSelect('resident.employees', 'employees')
+      .leftJoinAndSelect('resident.vehicles', 'vehicles')
+      .leftJoinAndSelect('resident.pets', 'pets')
+      .orderBy('resident.unit', 'ASC')
+      .addOrderBy('resident.fullName', 'ASC');
+
+    TypeormResidentRepository.applyFilters(builder, filters);
+
+    return builder;
+  }
+
   private static applyFilters(
     builder: SelectQueryBuilder<ResidentOrmEntity>,
-    query: ResidentQuery,
+    query: ResidentFilters,
   ): void {
     if (query.unit) {
-      builder.andWhere('resident.unit = :unit', { unit: query.unit.toUpperCase() });
+      builder.andWhere('resident.unit = :unit', { unit: query.unit.trim() });
     }
 
     if (query.occupancyType) {

@@ -1,12 +1,12 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString, Length, Max, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, Max, Min } from 'class-validator';
 
-import { OccupancyType } from '../../domain/enums/occupancy-type';
+import { ResidentFiltersQueryDto } from './resident-filters-query.dto';
 
 const MAX_PAGE_SIZE = 100;
 
-export class ListResidentsQueryDto {
+export class ListResidentsQueryDto extends ResidentFiltersQueryDto {
   @ApiPropertyOptional({ default: 1, minimum: 1 })
   @IsOptional()
   @Type(() => Number)
@@ -21,22 +21,4 @@ export class ListResidentsQueryDto {
   @Min(1)
   @Max(MAX_PAGE_SIZE)
   limit: number = 10;
-
-  @ApiPropertyOptional({ description: 'Busca por nome, unidade, CPF ou e-mail' })
-  @IsOptional()
-  @IsString()
-  @Length(1, 100)
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : undefined))
-  search?: string;
-
-  @ApiPropertyOptional({ example: 'A-101' })
-  @IsOptional()
-  @IsString()
-  @Length(1, 20)
-  unit?: string;
-
-  @ApiPropertyOptional({ enum: OccupancyType })
-  @IsOptional()
-  @IsEnum(OccupancyType)
-  occupancyType?: OccupancyType;
 }

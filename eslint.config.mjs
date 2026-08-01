@@ -35,7 +35,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-assignment': 'warn',
       '@typescript-eslint/no-unsafe-member-access': 'warn',
       // Controllers wire one dependency per use case, so the limit accounts for that.
-      'max-params': ['error', 6],
+      'max-params': ['error', 7],
       complexity: ['error', 12],
     },
   },

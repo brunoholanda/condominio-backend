@@ -27,6 +27,12 @@ export class TypeormUserRepository extends UserRepository {
     return row ? User.restore(row) : null;
   }
 
+  async findIdByCpf(cpf: string): Promise<string | null> {
+    const row = await this.repository.findOne({ where: { cpf }, select: { id: true } });
+
+    return row?.id ?? null;
+  }
+
   async save(user: User): Promise<User> {
     const { createdAt: _createdAt, updatedAt: _updatedAt, ...row } = user.toSnapshot();
 
