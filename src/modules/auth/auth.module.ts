@@ -11,6 +11,7 @@ import { LoginCodeIssuer } from './application/services/login-code-issuer';
 import { ConfirmLoginUseCase } from './application/use-cases/confirm-login.use-case';
 import { GetAuthenticatedUserUseCase } from './application/use-cases/get-authenticated-user.use-case';
 import { IdentifyOperatorUseCase } from './application/use-cases/identify-operator.use-case';
+import { RegisterUserUseCase } from './application/use-cases/register-user.use-case';
 import { ResendLoginCodeUseCase } from './application/use-cases/resend-login-code.use-case';
 import { StartLoginUseCase } from './application/use-cases/start-login.use-case';
 import { LoginChallengeRepository } from './domain/repositories/login-challenge.repository';
@@ -50,7 +51,8 @@ import { AuthController } from './presentation/auth.controller';
     ResendLoginCodeUseCase,
     GetAuthenticatedUserUseCase,
     IdentifyOperatorUseCase,
+    RegisterUserUseCase,
   ],
-  exports: [PasswordHasher, UserRepository],
+  exports: [PasswordHasher, UserRepository, AccessTokenService, JwtModule],
 })
 export class AuthModule {}

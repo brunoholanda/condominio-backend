@@ -19,7 +19,9 @@ function parseOrigins(value: string): string[] {
 }
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+  });
   const config = app.get(ConfigService<EnvironmentVariables, true>);
   const apiPrefix = config.get('API_PREFIX', { infer: true });
   const port = config.get('PORT', { infer: true });

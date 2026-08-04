@@ -28,6 +28,7 @@ import { Vehicle } from './vehicle';
 
 /** Raw input accepted by the aggregate, mirroring the paper form. */
 export interface ResidentProps {
+  condominiumId: string;
   unit: string;
   occupancyType: OccupancyType | string;
   fullName: string;
@@ -50,6 +51,7 @@ export interface ResidentProps {
 /** Flat, primitive-only view of the aggregate, consumed by persistence and presentation. */
 export interface ResidentSnapshot {
   id: string;
+  condominiumId: string;
   unit: string;
   occupancyType: OccupancyType;
   fullName: string;
@@ -74,6 +76,7 @@ export interface ResidentSnapshot {
 
 interface ResidentState {
   id: string;
+  condominiumId: string;
   unit: Unit;
   occupancyType: OccupancyType;
   fullName: string;
@@ -151,6 +154,7 @@ export class Resident {
     Resident.assertPlatesAreUnique(vehicles);
 
     return {
+      condominiumId: requireText('condomínio', props.condominiumId, { min: 1, max: 64 }),
       unit: Unit.create(props.unit, 'unidade/apartamento'),
       occupancyType,
       fullName: requireText('nome completo', props.fullName, { min: 3, max: 150 }),
@@ -217,6 +221,10 @@ export class Resident {
     return this.state.id;
   }
 
+  get condominiumId(): string {
+    return this.state.condominiumId;
+  }
+
   get unit(): Unit {
     return this.state.unit;
   }
@@ -238,6 +246,7 @@ export class Resident {
 
     return {
       id: state.id,
+      condominiumId: state.condominiumId,
       unit: state.unit.value,
       occupancyType: state.occupancyType,
       fullName: state.fullName,

@@ -1,25 +1,37 @@
 import { Injectable } from '@nestjs/common';
 
+import { CondominiumRepository } from '../../../condominiums/domain/repositories/condominium.repository';
 import { ResidentRepository } from '../../domain/repositories/resident.repository';
-import { CONDO_UNITS, TOTAL_UNITS } from '../../domain/value-objects/unit';
 import type { ResidentsSummaryDto } from '../dto/residents-summary.dto';
 
-/** Compares the registrations received against the fixed catalog of units. */
+/** Compares the registrations received against the condo's unit catalog. */
 @Injectable()
 export class GetResidentsSummaryUseCase {
-  constructor(private readonly residents: ResidentRepository) {}
+  constructor(
+    private readonly residents: ResidentRepository,
+    private readonly condominiums: CondominiumRepository,
+  ) {}
 
-  async execute(): Promise<ResidentsSummaryDto> {
-    const { registeredUnits, totalPeople } = await this.residents.tally();
+  async execute(condominiumId: string): Promise<ResidentsSummaryDto> {
+    const [{ registeredUnits, totalPeople }, allUnits, vacantUnitNumbers] = await Promise.all([
+      this.residents.tally(condominiumId),
+      this.condominiums.listUnitNumbers(condominiumId),
+      this.condominiums.listVacantUnitNumbers(condominiumId),
+    ]);
     const answered = new Set(registeredUnits);
-    // O catálogo é a fonte da verdade: pendente é o que existe e não respondeu.
-    const pendingUnitNumbers = CONDO_UNITS.filter((unit) => !answered.has(unit));
+    const vacant = new Set(vacantUnitNumbers);
+    // Pendente: existe no catálogo, não respondeu e não foi marcada como desocupada.
+    const pendingUnitNumbers = allUnits.filter(
+      (unit) => !answered.has(unit) && !vacant.has(unit),
+    );
 
     return {
-      totalUnits: TOTAL_UNITS,
+      totalUnits: allUnits.length,
       registeredUnits: registeredUnits.length,
       pendingUnits: pendingUnitNumbers.length,
       pendingUnitNumbers,
+      vacantUnits: vacantUnitNumbers.length,
+      vacantUnitNumbers,
       totalPeople,
     };
   }

@@ -1,9 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsEnum, IsIn, IsOptional, IsString, Length } from 'class-validator';
+import { IsEnum, IsOptional, IsString, Length } from 'class-validator';
 
 import { OccupancyType } from '../../domain/enums/occupancy-type';
-import { CONDO_UNITS } from '../../domain/value-objects/unit';
 
 /** Filters shared by the listing and the PDF report. */
 export class ResidentFiltersQueryDto {
@@ -14,9 +13,10 @@ export class ResidentFiltersQueryDto {
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : undefined))
   search?: string;
 
-  @ApiPropertyOptional({ example: '101', enum: CONDO_UNITS })
+  @ApiPropertyOptional({ example: '101' })
   @IsOptional()
-  @IsIn(CONDO_UNITS)
+  @IsString()
+  @Length(1, 20)
   unit?: string;
 
   @ApiPropertyOptional({ enum: OccupancyType })

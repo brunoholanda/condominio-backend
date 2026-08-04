@@ -33,6 +33,12 @@ export class StartLoginUseCase {
       throw new AuthenticationError('E-mail ou senha inválidos.');
     }
 
+    if (!user.isActive) {
+      throw new AuthenticationError(
+        'Esta conta está desativada. Procure o administrador da plataforma.',
+      );
+    }
+
     return this.loginCodes.issueFor(user);
   }
 }

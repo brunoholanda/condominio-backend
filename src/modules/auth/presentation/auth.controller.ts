@@ -7,10 +7,12 @@ import { ConfirmLoginDto } from '../application/dto/confirm-login.dto';
 import { IdentifyOperatorDto } from '../application/dto/identify-operator.dto';
 import { LoginChallengeDto, ResendLoginCodeDto } from '../application/dto/login-challenge.dto';
 import { LoginDto } from '../application/dto/login.dto';
+import { RegisterDto } from '../application/dto/register.dto';
 import type { AccessTokenPayload } from '../application/ports/access-token-service';
 import { ConfirmLoginUseCase } from '../application/use-cases/confirm-login.use-case';
 import { GetAuthenticatedUserUseCase } from '../application/use-cases/get-authenticated-user.use-case';
 import { IdentifyOperatorUseCase } from '../application/use-cases/identify-operator.use-case';
+import { RegisterUserUseCase } from '../application/use-cases/register-user.use-case';
 import { ResendLoginCodeUseCase } from '../application/use-cases/resend-login-code.use-case';
 import { StartLoginUseCase } from '../application/use-cases/start-login.use-case';
 import { CurrentUser } from '../infrastructure/http/current-user.decorator';
@@ -25,7 +27,18 @@ export class AuthController {
     private readonly resendLoginCode: ResendLoginCodeUseCase,
     private readonly getAuthenticatedUser: GetAuthenticatedUserUseCase,
     private readonly identifyOperator: IdentifyOperatorUseCase,
+    private readonly registerUser: RegisterUserUseCase,
   ) {}
+
+  @Public()
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Cria uma conta. O acesso ainda depende do login com código' })
+  @ApiResponse({ status: HttpStatus.CREATED, type: AuthenticatedUserDto })
+  @ApiResponse({ status: HttpStatus.CONFLICT, description: 'E-mail já cadastrado' })
+  register(@Body() body: RegisterDto): Promise<AuthenticatedUserDto> {
+    return this.registerUser.execute(body);
+  }
 
   @Public()
   @Post('login')

@@ -7,7 +7,6 @@ import {
   IsDateString,
   IsEmail,
   IsEnum,
-  IsIn,
   IsOptional,
   IsString,
   Length,
@@ -20,7 +19,6 @@ import {
   IsSignatureImage,
 } from '../../../../shared/application/validators/brazilian-formats.validator';
 import { OccupancyType } from '../../domain/enums/occupancy-type';
-import { CONDO_UNITS } from '../../domain/value-objects/unit';
 import {
   ContactPersonDto,
   HouseholdMemberDto,
@@ -40,10 +38,10 @@ const MAX_COLLECTION_SIZE = 20;
 export class CreateResidentDto {
   @ApiProperty({
     example: '101',
-    enum: CONDO_UNITS,
     description: 'Unidade/apartamento existente no condomínio',
   })
-  @IsIn(CONDO_UNITS)
+  @IsString()
+  @Length(1, 20)
   unit: string;
 
   @ApiProperty({ enum: OccupancyType, example: OccupancyType.Owner })

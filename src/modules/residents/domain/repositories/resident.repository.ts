@@ -23,23 +23,33 @@ export interface ResidentsTally {
  * Port used by the application layer to reach residents.
  *
  * Declared as an abstract class so it doubles as the Nest injection token,
- * keeping use cases decoupled from TypeORM (Dependency Inversion).
+ * keeping use cases decoupled from TypeORM (Dependency Inversion). Every
+ * method is scoped to a condominium: a tenant never sees another tenant's data.
  */
 export abstract class ResidentRepository {
   abstract save(resident: Resident): Promise<Resident>;
 
-  abstract findById(id: string): Promise<Resident | null>;
+  abstract findById(id: string, condominiumId: string): Promise<Resident | null>;
 
-  abstract findMany(query: ResidentQuery): Promise<PaginatedResult<Resident>>;
+  abstract findMany(
+    query: ResidentQuery & { condominiumId: string },
+  ): Promise<PaginatedResult<Resident>>;
 
   /** Every resident matching the filters, without pagination — used by reports. */
-  abstract findAll(filters: ResidentFilters): Promise<Resident[]>;
+  abstract findAll(filters: ResidentFilters & { condominiumId: string }): Promise<Resident[]>;
 
-  abstract findIdByCpf(cpf: string): Promise<string | null>;
+  abstract findIdByCpf(cpf: string, condominiumId: string): Promise<string | null>;
 
-  abstract findIdByUnit(unit: string): Promise<string | null>;
+  abstract findIdByUnit(unit: string, condominiumId: string): Promise<string | null>;
 
-  abstract tally(): Promise<ResidentsTally>;
+  /** Validates that the CPF belongs to the titular of the given unit in this condo. */
+  abstract findByUnitAndCpf(
+    unit: string,
+    cpf: string,
+    condominiumId: string,
+  ): Promise<Resident | null>;
 
-  abstract deleteById(id: string): Promise<void>;
+  abstract tally(condominiumId: string): Promise<ResidentsTally>;
+
+  abstract deleteById(id: string, condominiumId: string): Promise<void>;
 }

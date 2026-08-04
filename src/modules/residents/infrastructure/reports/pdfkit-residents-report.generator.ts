@@ -22,7 +22,7 @@ export class PdfKitResidentsReportGenerator extends ResidentsReportGenerator {
       autoFirstPage: false,
       info: {
         Title: 'Cadastro de moradores',
-        Author: 'Condomínio Porto Imperial',
+        Author: context.condominiumName,
         Subject: 'Documento confidencial com dados pessoais (Lei 13.709/2018)',
         CreationDate: generatedAt,
       },

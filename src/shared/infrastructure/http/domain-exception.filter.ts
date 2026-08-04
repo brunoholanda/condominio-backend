@@ -4,6 +4,7 @@ import type { Request, Response } from 'express';
 
 import {
   AuthenticationError,
+  BusinessRuleError,
   DomainError,
   InvalidFieldError,
   ResourceConflictError,
@@ -33,6 +34,7 @@ export class DomainExceptionFilter implements ExceptionFilter {
       error: exception.name,
       message: exception.message,
       field: exception instanceof InvalidFieldError ? exception.field : undefined,
+      code: exception instanceof BusinessRuleError ? exception.code : undefined,
       path,
       timestamp: new Date().toISOString(),
     });

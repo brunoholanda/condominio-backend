@@ -22,7 +22,14 @@ export class InvalidFieldError extends DomainError {
 }
 
 /** A rule involving more than one field (an aggregate invariant) was violated. */
-export class BusinessRuleError extends DomainError {}
+export class BusinessRuleError extends DomainError {
+  constructor(
+    message: string,
+    readonly code?: string,
+  ) {
+    super(message);
+  }
+}
 
 /** The caller could not be identified, or the credentials presented are not valid. */
 export class AuthenticationError extends DomainError {}

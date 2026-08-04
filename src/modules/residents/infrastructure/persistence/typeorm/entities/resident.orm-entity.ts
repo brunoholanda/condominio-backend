@@ -19,12 +19,16 @@ import { VehicleOrmEntity } from './vehicle.orm-entity';
 const CASCADE_CHILDREN: RelationOptions = { cascade: ['insert'], eager: true };
 
 @Entity('residents')
+@Index('idx_residents_condo_unit', ['condominiumId', 'unit'], { unique: true })
+@Index('idx_residents_condo_cpf', ['condominiumId', 'cpf'], { unique: true })
 export class ResidentOrmEntity {
   @PrimaryColumn('uuid')
   id: string;
 
-  @Index('idx_residents_unit', { unique: true })
-  @Column({ name: 'unit', type: 'varchar', length: 3 })
+  @Column({ name: 'condominium_id', type: 'uuid' })
+  condominiumId: string;
+
+  @Column({ name: 'unit', type: 'varchar', length: 20 })
   unit: string;
 
   @Column({ name: 'occupancy_type', type: 'varchar', length: 10 })
@@ -36,7 +40,6 @@ export class ResidentOrmEntity {
   @Column({ name: 'rg', type: 'varchar', length: 20 })
   rg: string;
 
-  @Index('idx_residents_cpf', { unique: true })
   @Column({ name: 'cpf', type: 'varchar', length: 11 })
   cpf: string;
 

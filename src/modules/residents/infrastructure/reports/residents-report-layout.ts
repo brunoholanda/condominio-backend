@@ -3,8 +3,6 @@ import type { ReportContext } from '../../application/ports/residents-report-gen
 import { OCCUPANCY_TYPE_LABELS, PET_SPECIES_LABELS } from './report-labels';
 import { reportFormat } from './report-format';
 
-const CONDO_NAME = 'Condomínio Porto Imperial';
-
 /**
  * Carimbo de confidencialidade em todas as páginas: fora do sistema o arquivo
  * perde qualquer proteção, e quem o receber precisa saber o que tem em mãos e
@@ -65,10 +63,13 @@ interface ReportIssue extends ReportContext {
  */
 export class ResidentsReportLayout {
   private y = 0;
+  private condominiumName = '';
 
   constructor(private readonly doc: PDFKit.PDFDocument) {}
 
   draw(residents: ResidentResponseDto[], issue: ReportIssue): void {
+    this.condominiumName = issue.condominiumName;
+
     for (const resident of residents) {
       this.drawResidentPage(resident);
     }
@@ -109,7 +110,7 @@ export class ResidentsReportLayout {
       .font(FONTS.bold)
       .fontSize(7.5)
       .fillColor(COLORS.accent)
-      .text(CONDO_NAME.toUpperCase(), this.left, this.y, {
+      .text(this.condominiumName.toUpperCase(), this.left, this.y, {
         width: this.contentWidth,
         characterSpacing: 1.2,
         lineBreak: false,
@@ -558,7 +559,7 @@ export class ResidentsReportLayout {
   private drawFooters({ generatedAt, requestedBy }: ReportIssue): void {
     const { doc } = this;
     const range = doc.bufferedPageRange();
-    const origin = `${CONDO_NAME} · Gerado em ${reportFormat.dateTime(generatedAt.toISOString())} por ${requestedBy}`;
+    const origin = `${this.condominiumName} · Gerado em ${reportFormat.dateTime(generatedAt.toISOString())} por ${requestedBy}`;
 
     for (let index = 0; index < range.count; index += 1) {
       doc.switchToPage(range.start + index);

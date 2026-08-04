@@ -5,25 +5,28 @@ import type { Observable } from 'rxjs';
 import { tap } from 'rxjs';
 
 import { AUDIT_ACCESS_KEY } from './audit-access.decorator';
+import { AuditAccessLogService } from './audit-access-log.service';
 
-/** Only what the trail needs; the request carries much more than that. */
 interface AuditedRequest {
   params?: Record<string, string>;
-  user?: { email?: string };
+  ip?: string;
+  headers?: Record<string, string | string[] | undefined>;
+  user?: { email?: string; sub?: string };
 }
 
 const ANONYMOUS = 'formulário público';
 
 /**
- * Access trail required by the LGPD: registers who read, exported or removed
- * personal data. Records the actor, the action and the affected registration —
- * never the data itself, so the log does not become a second copy of it.
+ * Trilha LGPD: log + persistência em audit_access_logs (sem gravar dados pessoais do alvo).
  */
 @Injectable()
 export class AuditAccessInterceptor implements NestInterceptor {
   private readonly logger = new Logger('TrilhaDeAcesso');
 
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly auditLogs: AuditAccessLogService,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const action = this.reflector.get<string | undefined>(AUDIT_ACCESS_KEY, context.getHandler());
@@ -33,13 +36,35 @@ export class AuditAccessInterceptor implements NestInterceptor {
     }
 
     const request = context.switchToHttp().getRequest<AuditedRequest>();
-    const entry = `${request.user?.email ?? ANONYMOUS} ${action}${AuditAccessInterceptor.targetOf(request)}`;
+    const actorEmail = request.user?.email ?? ANONYMOUS;
+    const entryLabel = `${actorEmail} ${action}${AuditAccessInterceptor.targetOf(request)}`;
+    const base = {
+      actorEmail: request.user?.email ?? null,
+      actorUserId: request.user?.sub ?? null,
+      action,
+      condominiumId: request.params?.condominiumId ?? request.params?.id ?? null,
+      targetId: request.params?.id ?? request.params?.residentId ?? null,
+      ip: request.ip ?? null,
+      userAgent: AuditAccessInterceptor.header(request, 'user-agent'),
+    };
 
     return next.handle().pipe(
       tap({
-        next: () => this.logger.log(entry),
-        error: (error: unknown) =>
-          this.logger.warn(`${entry} — falhou: ${AuditAccessInterceptor.reasonOf(error)}`),
+        next: () => {
+          this.logger.log(entryLabel);
+          void this.auditLogs.record({ ...base, success: true }).catch((error: unknown) => {
+            this.logger.warn(`Falha ao persistir auditoria: ${String(error)}`);
+          });
+        },
+        error: (error: unknown) => {
+          const reason = AuditAccessInterceptor.reasonOf(error);
+          this.logger.warn(`${entryLabel} — falhou: ${reason}`);
+          void this.auditLogs
+            .record({ ...base, success: false, errorMessage: reason })
+            .catch((persistError: unknown) => {
+              this.logger.warn(`Falha ao persistir auditoria: ${String(persistError)}`);
+            });
+        },
       }),
     );
   }
@@ -50,5 +75,11 @@ export class AuditAccessInterceptor implements NestInterceptor {
 
   private static reasonOf(error: unknown): string {
     return error instanceof Error ? error.message : 'erro desconhecido';
+  }
+
+  private static header(request: AuditedRequest, name: string): string | null {
+    const value = request.headers?.[name];
+    if (Array.isArray(value)) return value[0] ?? null;
+    return value ?? null;
   }
 }

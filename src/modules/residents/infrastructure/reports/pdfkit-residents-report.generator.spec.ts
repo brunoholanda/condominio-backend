@@ -10,6 +10,7 @@ const SIGNATURE =
 function makeResident(overrides: Partial<ResidentResponseDto> = {}): ResidentResponseDto {
   return {
     id: '2f1a1d6e-4f5b-4f4b-9f0a-0b6f1a2c3d4e',
+    condominiumId: 'a0000000-0000-4000-8000-000000000001',
     unit: '101',
     occupancyType: OccupancyType.Owner,
     fullName: 'Carlos Eduardo Pereira',
@@ -40,7 +41,10 @@ function countPages(pdf: Buffer): number {
 
 describe('PdfKitResidentsReportGenerator', () => {
   const generator = new PdfKitResidentsReportGenerator();
-  const context = { requestedBy: 'sindico@exemplo.com.br' };
+  const context = {
+    requestedBy: 'sindico@exemplo.com.br',
+    condominiumName: 'Condomínio Porto Imperial',
+  };
 
   it('produces a PDF with one page per resident', async () => {
     const tenant = makeResident({

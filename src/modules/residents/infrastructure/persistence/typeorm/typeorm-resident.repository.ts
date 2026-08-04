@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import type { EntityManager, SelectQueryBuilder } from 'typeorm';
-import { DataSource } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 
 import type { PaginatedResult } from '../../../../../shared/application/paginated-result';
 import { buildPaginatedResult } from '../../../../../shared/application/paginated-result';
@@ -45,7 +45,7 @@ export class TypeormResidentRepository extends ResidentRepository {
       await manager.getRepository(ResidentOrmEntity).save(row);
     });
 
-    const saved = await this.findById(resident.id);
+    const saved = await this.findById(resident.id, resident.condominiumId);
 
     if (!saved) {
       throw new Error(`Falha ao persistir o morador ${resident.id}.`);
@@ -54,13 +54,17 @@ export class TypeormResidentRepository extends ResidentRepository {
     return saved;
   }
 
-  async findById(id: string): Promise<Resident | null> {
-    const row = await this.dataSource.getRepository(ResidentOrmEntity).findOne({ where: { id } });
+  async findById(id: string, condominiumId: string): Promise<Resident | null> {
+    const row = await this.dataSource
+      .getRepository(ResidentOrmEntity)
+      .findOne({ where: { id, condominiumId } });
 
     return row ? ResidentMapper.toDomain(row) : null;
   }
 
-  async findMany(query: ResidentQuery): Promise<PaginatedResult<Resident>> {
+  async findMany(
+    query: ResidentQuery & { condominiumId: string },
+  ): Promise<PaginatedResult<Resident>> {
     const builder = this.createFilteredQuery(query)
       .skip((query.page - 1) * query.limit)
       .take(query.limit);
@@ -74,15 +78,15 @@ export class TypeormResidentRepository extends ResidentRepository {
     );
   }
 
-  async findAll(filters: ResidentFilters): Promise<Resident[]> {
+  async findAll(filters: ResidentFilters & { condominiumId: string }): Promise<Resident[]> {
     const rows = await this.createFilteredQuery(filters).getMany();
 
     return rows.map((row) => ResidentMapper.toDomain(row));
   }
 
-  async findIdByCpf(cpf: string): Promise<string | null> {
+  async findIdByCpf(cpf: string, condominiumId: string): Promise<string | null> {
     const row = await this.dataSource.getRepository(ResidentOrmEntity).findOne({
-      where: { cpf: onlyDigits(cpf) },
+      where: { cpf: onlyDigits(cpf), condominiumId },
       select: { id: true },
       loadEagerRelations: false,
     });
@@ -90,9 +94,9 @@ export class TypeormResidentRepository extends ResidentRepository {
     return row?.id ?? null;
   }
 
-  async findIdByUnit(unit: string): Promise<string | null> {
+  async findIdByUnit(unit: string, condominiumId: string): Promise<string | null> {
     const row = await this.dataSource.getRepository(ResidentOrmEntity).findOne({
-      where: { unit },
+      where: { unit, condominiumId },
       select: { id: true },
       loadEagerRelations: false,
     });
@@ -100,22 +104,38 @@ export class TypeormResidentRepository extends ResidentRepository {
     return row?.id ?? null;
   }
 
-  async tally(): Promise<ResidentsTally> {
-    const [rows, householdMembers] = await Promise.all([
-      this.dataSource.getRepository(ResidentOrmEntity).find({
-        select: { unit: true },
-        order: { unit: 'ASC' },
-        loadEagerRelations: false,
-      }),
-      this.dataSource.getRepository(HouseholdMemberOrmEntity).count(),
-    ]);
+  async findByUnitAndCpf(
+    unit: string,
+    cpf: string,
+    condominiumId: string,
+  ): Promise<Resident | null> {
+    const row = await this.dataSource.getRepository(ResidentOrmEntity).findOne({
+      where: { unit: unit.trim(), cpf: onlyDigits(cpf), condominiumId },
+    });
+
+    return row ? ResidentMapper.toDomain(row) : null;
+  }
+
+  async tally(condominiumId: string): Promise<ResidentsTally> {
+    const rows = await this.dataSource.getRepository(ResidentOrmEntity).find({
+      where: { condominiumId },
+      select: { id: true, unit: true },
+      order: { unit: 'ASC' },
+      loadEagerRelations: false,
+    });
+    const residentIds = rows.map((row) => row.id);
+    const householdMembers = residentIds.length
+      ? await this.dataSource
+          .getRepository(HouseholdMemberOrmEntity)
+          .count({ where: { residentId: In(residentIds) } })
+      : 0;
     const registeredUnits = rows.map((row) => row.unit);
 
     return { registeredUnits, totalPeople: registeredUnits.length + householdMembers };
   }
 
-  async deleteById(id: string): Promise<void> {
-    await this.dataSource.getRepository(ResidentOrmEntity).delete({ id });
+  async deleteById(id: string, condominiumId: string): Promise<void> {
+    await this.dataSource.getRepository(ResidentOrmEntity).delete({ id, condominiumId });
   }
 
   private async deleteChildren(manager: EntityManager, residentId: string): Promise<void> {
@@ -124,7 +144,9 @@ export class TypeormResidentRepository extends ResidentRepository {
     }
   }
 
-  private createFilteredQuery(filters: ResidentFilters): SelectQueryBuilder<ResidentOrmEntity> {
+  private createFilteredQuery(
+    filters: ResidentFilters & { condominiumId: string },
+  ): SelectQueryBuilder<ResidentOrmEntity> {
     const builder = this.dataSource
       .getRepository(ResidentOrmEntity)
       .createQueryBuilder('resident')
@@ -132,6 +154,7 @@ export class TypeormResidentRepository extends ResidentRepository {
       .leftJoinAndSelect('resident.employees', 'employees')
       .leftJoinAndSelect('resident.vehicles', 'vehicles')
       .leftJoinAndSelect('resident.pets', 'pets')
+      .where('resident.condominiumId = :condominiumId', { condominiumId: filters.condominiumId })
       .orderBy('resident.unit', 'ASC')
       .addOrderBy('resident.fullName', 'ASC');
 

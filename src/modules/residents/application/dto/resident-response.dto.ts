@@ -13,6 +13,9 @@ export class ResidentResponseDto {
   @ApiProperty({ format: 'uuid' })
   id: string;
 
+  @ApiProperty({ format: 'uuid' })
+  condominiumId: string;
+
   @ApiProperty()
   unit: string;
 

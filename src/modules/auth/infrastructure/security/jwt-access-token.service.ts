@@ -10,6 +10,8 @@ import type {
 } from '../../application/ports/access-token-service';
 import { AccessTokenService } from '../../application/ports/access-token-service';
 
+const USER_AUDIENCE = 'condogest-user';
+
 @Injectable()
 export class JwtAccessTokenService extends AccessTokenService {
   private readonly expiresInSeconds: number;
@@ -22,19 +24,60 @@ export class JwtAccessTokenService extends AccessTokenService {
     this.expiresInSeconds = config.get('JWT_EXPIRES_IN_SECONDS', { infer: true });
   }
 
-  async sign(payload: AccessTokenPayload): Promise<SignedAccessToken> {
-    const token = await this.jwtService.signAsync(payload, {
-      expiresIn: this.expiresInSeconds,
-    });
+  async sign(payload: Omit<AccessTokenPayload, 'typ'>): Promise<SignedAccessToken> {
+    const token = await this.jwtService.signAsync(
+      { ...payload, typ: 'user' satisfies AccessTokenPayload['typ'] },
+      {
+        expiresIn: this.expiresInSeconds,
+        audience: USER_AUDIENCE,
+      },
+    );
 
     return { token, expiresInSeconds: this.expiresInSeconds };
   }
 
   async verify(token: string): Promise<AccessTokenPayload> {
     try {
-      return await this.jwtService.verifyAsync<AccessTokenPayload>(token);
-    } catch {
-      throw new AuthenticationError('Sessão expirada ou inválida. Faça login novamente.');
+      const payload = await this.jwtService.verifyAsync<Record<string, unknown>>(token, {
+        audience: USER_AUDIENCE,
+      });
+
+      return this.toUserPayload(payload);
+    } catch (error) {
+      if (error instanceof AuthenticationError) {
+        throw error;
+      }
+
+      // Tokens antigos (sem audience) — tenta verify sem audience e rejeita staff.
+      try {
+        const legacy = await this.jwtService.verifyAsync<Record<string, unknown>>(token);
+
+        return this.toUserPayload(legacy);
+      } catch (legacyError) {
+        if (legacyError instanceof AuthenticationError) {
+          throw legacyError;
+        }
+
+        throw new AuthenticationError('Sessão expirada ou inválida. Faça login novamente.');
+      }
     }
+  }
+
+  private toUserPayload(payload: Record<string, unknown>): AccessTokenPayload {
+    if (payload.typ === 'staff') {
+      throw new AuthenticationError('Token de funcionário não é válido nesta área.');
+    }
+
+    if (payload.typ != null && payload.typ !== 'user') {
+      throw new AuthenticationError('Sessão inválida. Faça login novamente.');
+    }
+
+    return {
+      sub: String(payload.sub ?? ''),
+      email: String(payload.email ?? ''),
+      name: String(payload.name ?? ''),
+      isSystemOwner: Boolean(payload.isSystemOwner),
+      typ: 'user',
+    };
   }
 }

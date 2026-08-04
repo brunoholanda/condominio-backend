@@ -19,6 +19,19 @@ export class ResidentsSummaryDto {
   pendingUnitNumbers: string[];
 
   @ApiProperty({
+    example: 3,
+    description: 'Unidades marcadas como desocupadas (ninguém mora no momento)',
+  })
+  vacantUnits: number;
+
+  @ApiProperty({
+    type: [String],
+    example: ['305', '412'],
+    description: 'Unidades sinalizadas como desocupadas',
+  })
+  vacantUnitNumbers: string[];
+
+  @ApiProperty({
     example: 37,
     description: 'Pessoas que residem nas unidades cadastradas (titulares e moradores adicionais)',
   })

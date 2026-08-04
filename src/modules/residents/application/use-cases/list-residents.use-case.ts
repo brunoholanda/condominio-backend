@@ -9,13 +9,17 @@ import { ResidentPresenter } from '../presenters/resident.presenter';
 export class ListResidentsUseCase {
   constructor(private readonly residents: ResidentRepository) {}
 
-  async execute(query: ListResidentsQueryDto): Promise<PaginatedResidentsResponseDto> {
+  async execute(
+    query: ListResidentsQueryDto,
+    condominiumId: string,
+  ): Promise<PaginatedResidentsResponseDto> {
     const result = await this.residents.findMany({
       page: query.page,
       limit: query.limit,
       search: query.search,
       unit: query.unit,
       occupancyType: query.occupancyType,
+      condominiumId,
     });
 
     return ResidentPresenter.toPaginatedResponse(result);

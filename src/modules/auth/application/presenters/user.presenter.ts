@@ -9,6 +9,13 @@ export class UserPresenter {
       name: user.name,
       email: user.email.value,
       cpf: user.cpf?.value ?? null,
+      platformRole: user.platformRole,
+      isActive: user.isActive,
+      isSystemOwner: user.isSystemOwner,
+      plan: user.plan,
+      subscriptionStatus: user.subscriptionStatus,
+      trialEndsAt: user.trialEndsAt.toISOString(),
+      subscriptionUpdatedAt: user.subscriptionUpdatedAt?.toISOString() ?? null,
     };
   }
 }

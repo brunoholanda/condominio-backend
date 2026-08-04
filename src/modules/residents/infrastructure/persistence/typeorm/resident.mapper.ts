@@ -10,6 +10,7 @@ export class ResidentMapper {
   static toDomain(row: ResidentOrmEntity): Resident {
     const snapshot: ResidentSnapshot = {
       id: row.id,
+      condominiumId: row.condominiumId,
       unit: row.unit,
       occupancyType: row.occupancyType,
       fullName: row.fullName,
@@ -66,6 +67,7 @@ export class ResidentMapper {
 
     return {
       id: snapshot.id,
+      condominiumId: snapshot.condominiumId,
       unit: snapshot.unit,
       occupancyType: snapshot.occupancyType,
       fullName: snapshot.fullName,

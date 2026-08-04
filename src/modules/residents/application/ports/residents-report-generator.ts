@@ -3,6 +3,7 @@ import type { ResidentResponseDto } from '../dto/resident-response.dto';
 /** Who asked for the file: printed on every page, so a leaked copy has an origin. */
 export interface ReportContext {
   requestedBy: string;
+  condominiumName: string;
 }
 
 /**

@@ -1,7 +1,7 @@
 {
   "name": "@condominio/backend",
   "version": "1.0.0",
-  "description": "API de cadastro de moradores do Condomínio Porto Imperial",
+  "description": "API SaaS de gestão de condomínios (CondoGest)",
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
@@ -23,12 +23,14 @@
     "migration:generate": "npm run typeorm -- migration:generate"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1101.0",
     "@nestjs/common": "^11.1.28",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.28",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "^11.1.28",
     "@nestjs/swagger": "^11.4.6",
+    "@nestjs/throttler": "^6.5.0",
     "@nestjs/typeorm": "^11.0.3",
     "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",
@@ -37,8 +39,10 @@
     "nodemailer": "^9.0.3",
     "pdfkit": "^0.19.1",
     "pg": "^8.22.0",
+    "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "stripe": "^17.7.0",
     "typeorm": "^0.3.31"
   },
   "devDependencies": {
@@ -48,9 +52,11 @@
     "@nestjs/testing": "^11.1.28",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
+    "@types/multer": "^2.2.0",
     "@types/node": "^26.1.2",
     "@types/nodemailer": "^8.0.1",
     "@types/pdfkit": "^0.17.6",
+    "@types/qrcode": "^1.5.6",
     "@types/supertest": "^7.2.1",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",

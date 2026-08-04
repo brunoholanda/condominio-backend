@@ -36,6 +36,12 @@ export class ConfirmLoginUseCase {
       throw new ResourceExpiredError(EXPIRED);
     }
 
+    if (!user.isActive) {
+      throw new AuthenticationError(
+        'Esta conta está desativada. Procure o administrador da plataforma.',
+      );
+    }
+
     if (!(await this.passwordHasher.compare(code, challenge.codeHash))) {
       const failed = challenge.registerFailure();
 
@@ -58,6 +64,7 @@ export class ConfirmLoginUseCase {
       sub: user.id,
       email: user.email.value,
       name: user.name,
+      isSystemOwner: user.isSystemOwner,
     });
 
     return {

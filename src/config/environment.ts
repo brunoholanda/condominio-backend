@@ -39,6 +39,15 @@ export class SeedAccount {
   password: string;
 }
 
+/**
+ * Contas bootstrap esperadas no seed (documentação / produção).
+ * Os papéis reais são aplicados por e-mail em `database/seeds/seed-users.ts`,
+ * não pela ordem deste array.
+ *
+ * - holanda_rodrigues@hotmail.com → SYSTEM_OWNER (dono/gestor da plataforma)
+ * - hellennamello@hotmail.com → plano Prime ACTIVE, sem SYSTEM_OWNER
+ */
+
 /** Anything that is not a well-formed list is left untouched, so `@IsArray` reports it. */
 const asSeedAccounts = ({ value }: { value: unknown }): unknown => {
   const raw: unknown = typeof value === 'string' ? tryParseJson(value) : value;
@@ -70,6 +79,14 @@ export class EnvironmentVariables {
   @IsString()
   CORS_ORIGINS: string = 'http://localhost:5173';
 
+  /**
+   * URL base do frontend, usada nos QR Codes de compartilhamento
+   * (ex.: https://app.condogest.com.br). Se omitida, usa a primeira origem de CORS.
+   */
+  @IsOptional()
+  @IsString()
+  PUBLIC_APP_URL?: string;
+
   @IsString()
   DATABASE_HOST: string;
 
@@ -96,14 +113,61 @@ export class EnvironmentVariables {
   @IsBoolean()
   DATABASE_LOGGING: boolean = false;
 
+  /** Endpoint S3-compatível do Cloudflare R2 (ex.: https://<accountid>.r2.cloudflarestorage.com). */
+  @IsString()
+  @MinLength(1)
+  R2_ENDPOINT: string;
+
+  @IsString()
+  @MinLength(1)
+  R2_BUCKET: string;
+
+  @IsString()
+  @MinLength(1)
+  R2_ACCESS_KEY_ID: string;
+
+  @IsString()
+  @MinLength(1)
+  R2_SECRET_ACCESS_KEY: string;
+
+  /** Região do cliente S3; no R2 use `auto`. */
+  @IsString()
+  @MinLength(1)
+  R2_REGION: string = 'auto';
+
   @IsString()
   @MinLength(32, { message: 'JWT_SECRET deve ter no mínimo 32 caracteres.' })
   JWT_SECRET: string;
+
+  /**
+   * Segredo dedicado aos JWTs de funcionários (ponto). Se omitido, deriva de JWT_SECRET.
+   * Em produção, use um valor distinto.
+   */
+  @IsOptional()
+  @IsString()
+  @MinLength(32, { message: 'JWT_STAFF_SECRET deve ter no mínimo 32 caracteres.' })
+  JWT_STAFF_SECRET?: string;
 
   @Type(() => Number)
   @IsInt()
   @Min(60)
   JWT_EXPIRES_IN_SECONDS: number = 28_800;
+
+  /**
+   * Material para AES-256-GCM (API keys Asaas etc.). Se omitido, deriva de JWT_SECRET.
+   */
+  @IsOptional()
+  @IsString()
+  @MinLength(32)
+  ENCRYPTION_KEY?: string;
+
+  /** Dias de retenção de selfies de ponto no R2 (purge automático). */
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(7)
+  @Max(3650)
+  PUNCH_SELFIE_RETENTION_DAYS: number = 90;
 
   @IsString()
   SMTP_HOST: string;
@@ -136,6 +200,65 @@ export class EnvironmentVariables {
   @Min(60)
   @Max(3600)
   LOGIN_CODE_TTL_SECONDS: number = 600;
+
+  /** Destinatário dos avisos de novos chamados de suporte. */
+  @IsOptional()
+  @IsString()
+  @IsEmail()
+  SUPPORT_NOTIFY_EMAIL: string = 'holanda_rodrigues@hotmail.com';
+
+  /** Duração do período de teste gratuito da assinatura SaaS. */
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(365)
+  BILLING_TRIAL_DAYS: number = 30;
+
+  @IsOptional()
+  @IsString()
+  BILLING_CURRENCY: string = 'BRL';
+
+  /** Stripe: chave secreta da API (sk_...). */
+  @IsOptional()
+  @IsString()
+  STRIPE_SECRET_KEY?: string;
+
+  /** Stripe: secret do endpoint de webhook. */
+  @IsOptional()
+  @IsString()
+  STRIPE_WEBHOOK_SECRET?: string;
+
+  /** Price ID do plano Lite. */
+  @IsOptional()
+  @IsString()
+  STRIPE_PRICE_ID?: string;
+
+  /** Price ID do plano Prime. */
+  @IsOptional()
+  @IsString()
+  STRIPE_PRIME_PRICE_ID?: string;
+
+  /** Price ID do plano Gestor. */
+  @IsOptional()
+  @IsString()
+  STRIPE_GESTOR_PRICE_ID?: string;
+
+  /**
+   * URL base da API Asaas. Se omitida, usa sandbox ou produção conforme o
+   * prefixo da chave do condomínio (`$aact_hmlg` → sandbox).
+   */
+  @IsOptional()
+  @IsString()
+  ASAAS_API_URL?: string;
+
+  /**
+   * Token configurado no webhook Asaas (header `asaas-access-token`).
+   * Obrigatório para confirmar pagamentos PIX automaticamente.
+   */
+  @IsOptional()
+  @IsString()
+  ASAAS_WEBHOOK_TOKEN?: string;
 
   /**
    * Accounts with access to the residents area, created by `npm run seed`.

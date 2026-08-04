@@ -10,9 +10,9 @@ export class DeleteResidentUseCase {
     private readonly findResident: FindResidentByIdUseCase,
   ) {}
 
-  async execute(id: string): Promise<void> {
-    const resident = await this.findResident.getOrFail(id);
+  async execute(id: string, condominiumId: string): Promise<void> {
+    const resident = await this.findResident.getOrFail(id, condominiumId);
 
-    await this.residents.deleteById(resident.id);
+    await this.residents.deleteById(resident.id, condominiumId);
   }
 }

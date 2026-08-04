@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { toIsoDate } from '../../../../shared/application/date-format';
 import { ResourceNotFoundError } from '../../../../shared/domain/domain-error';
+import { GetCondominiumUseCase } from '../../../condominiums/application/use-cases/get-condominium.use-case';
 import { ResidentRepository } from '../../domain/repositories/resident.repository';
 import type { ResidentFiltersQueryDto } from '../dto/resident-filters-query.dto';
 import { ResidentsReportGenerator } from '../ports/residents-report-generator';
@@ -21,10 +22,18 @@ export class GenerateResidentsReportUseCase {
   constructor(
     private readonly residents: ResidentRepository,
     private readonly reportGenerator: ResidentsReportGenerator,
+    private readonly getCondominium: GetCondominiumUseCase,
   ) {}
 
-  async execute(filters: ResidentFiltersQueryDto, requestedBy: string): Promise<ResidentsReport> {
-    const residents = await this.residents.findAll(filters);
+  async execute(
+    filters: ResidentFiltersQueryDto,
+    condominiumId: string,
+    requestedBy: string,
+  ): Promise<ResidentsReport> {
+    const [residents, condominium] = await Promise.all([
+      this.residents.findAll({ ...filters, condominiumId }),
+      this.getCondominium.getOrFail(condominiumId),
+    ]);
 
     if (residents.length === 0) {
       throw new ResourceNotFoundError('Nenhum morador encontrado para gerar o relatório.');
@@ -32,7 +41,7 @@ export class GenerateResidentsReportUseCase {
 
     const content = await this.reportGenerator.generate(
       residents.map((resident) => ResidentPresenter.toResponse(resident)),
-      { requestedBy },
+      { requestedBy, condominiumName: condominium.name },
     );
 
     return { fileName: `moradores-${toIsoDate(new Date())}.pdf`, content };

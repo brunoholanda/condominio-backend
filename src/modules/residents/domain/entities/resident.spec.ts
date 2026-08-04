@@ -11,8 +11,11 @@ function makeSignatureOf(bytes: number): string {
   return `data:image/png;base64,${'A'.repeat(Math.ceil(bytes / 3) * 4)}`;
 }
 
+const CONDOMINIUM_ID = 'a0000000-0000-4000-8000-000000000001';
+
 function makeProps(overrides: Partial<ResidentProps> = {}): ResidentProps {
   return {
+    condominiumId: CONDOMINIUM_ID,
     unit: ' 101 ',
     occupancyType: OccupancyType.Owner,
     fullName: 'Carlos   Eduardo Pereira',
@@ -72,10 +75,8 @@ describe('Resident', () => {
     expect(() => Resident.create(props)).toThrow(InvalidFieldError);
   });
 
-  it('rejects a unit that does not exist in the condo', () => {
-    expect(() => Resident.create(makeProps({ unit: '118' }))).toThrow(InvalidFieldError);
-    expect(() => Resident.create(makeProps({ unit: '501' }))).toThrow(InvalidFieldError);
-    expect(() => Resident.create(makeProps({ unit: 'A-101' }))).toThrow(InvalidFieldError);
+  it('rejects an empty unit', () => {
+    expect(() => Resident.create(makeProps({ unit: '   ' }))).toThrow(InvalidFieldError);
   });
 
   it('rejects an invalid CPF', () => {
