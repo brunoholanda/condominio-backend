@@ -8,8 +8,8 @@ import { BookingPresenter } from '../presenters/booking.presenter';
 export class ListMyBookingsUseCase {
   constructor(private readonly bookings: BookingRepository) {}
 
-  async execute(residentAccountId: string): Promise<BookingResponseDto[]> {
-    const rows = await this.bookings.findManyByResidentAccount(residentAccountId);
+  async execute(residentId: string): Promise<BookingResponseDto[]> {
+    const rows = await this.bookings.findManyByResident(residentId);
 
     return rows.map((booking) => BookingPresenter.toResponse(booking));
   }

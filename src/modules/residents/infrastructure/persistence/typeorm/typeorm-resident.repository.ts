@@ -94,6 +94,14 @@ export class TypeormResidentRepository extends ResidentRepository {
     return row?.id ?? null;
   }
 
+  async findByCpf(cpf: string, condominiumId: string): Promise<Resident | null> {
+    const row = await this.dataSource.getRepository(ResidentOrmEntity).findOne({
+      where: { cpf: onlyDigits(cpf), condominiumId },
+    });
+
+    return row ? ResidentMapper.toDomain(row) : null;
+  }
+
   async findIdByUnit(unit: string, condominiumId: string): Promise<string | null> {
     const row = await this.dataSource.getRepository(ResidentOrmEntity).findOne({
       where: { unit, condominiumId },

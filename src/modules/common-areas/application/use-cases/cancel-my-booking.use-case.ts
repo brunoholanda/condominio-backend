@@ -18,11 +18,11 @@ export class CancelMyBookingUseCase {
   async execute(
     bookingId: string,
     condominiumId: string,
-    residentAccountId: string,
+    residentId: string,
   ): Promise<BookingResponseDto> {
     const booking = await this.bookings.findById(bookingId, condominiumId);
 
-    if (!booking || booking.residentAccountId !== residentAccountId) {
+    if (!booking || booking.residentId !== residentId) {
       throw new ResourceNotFoundError(`Reserva ${bookingId} não encontrada.`);
     }
 

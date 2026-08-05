@@ -13,7 +13,7 @@ export abstract class BookingRepository {
 
   abstract findManyByCondo(condominiumId: string, filters?: BookingFilters): Promise<Booking[]>;
 
-  abstract findManyByResidentAccount(residentAccountId: string): Promise<Booking[]>;
+  abstract findManyByResident(residentId: string): Promise<Booking[]>;
 
   /** Bookings of the area overlapping the window, in one of the given statuses. */
   abstract findOverlapping(

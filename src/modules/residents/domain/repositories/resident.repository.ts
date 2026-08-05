@@ -40,6 +40,9 @@ export abstract class ResidentRepository {
 
   abstract findIdByCpf(cpf: string, condominiumId: string): Promise<string | null>;
 
+  /** Titular do condomínio pelo CPF (cadastro de moradores). */
+  abstract findByCpf(cpf: string, condominiumId: string): Promise<Resident | null>;
+
   abstract findIdByUnit(unit: string, condominiumId: string): Promise<string | null>;
 
   /** Validates that the CPF belongs to the titular of the given unit in this condo. */

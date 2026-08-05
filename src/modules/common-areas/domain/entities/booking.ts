@@ -13,7 +13,7 @@ export interface BookingProps {
   commonAreaId: string;
   condominiumId: string;
   unitNumber: string;
-  residentAccountId: string;
+  residentId: string;
   startsAt: Date | string;
   endsAt: Date | string;
   costSnapshotCents: number;
@@ -26,7 +26,7 @@ export interface BookingSnapshot {
   commonAreaId: string;
   condominiumId: string;
   unitNumber: string;
-  residentAccountId: string;
+  residentId: string;
   startsAt: Date;
   endsAt: Date;
   status: BookingStatus;
@@ -56,7 +56,7 @@ export class Booking {
   }
 
   static restore(snapshot: BookingSnapshot): Booking {
-    return new Booking({ ...snapshot });
+    return new Booking(snapshot);
   }
 
   approve(): Booking {
@@ -115,10 +115,7 @@ export class Booking {
       commonAreaId: requireText('área comum', props.commonAreaId, { min: 1, max: 64 }),
       condominiumId: requireText('condomínio', props.condominiumId, { min: 1, max: 64 }),
       unitNumber: requireText('unidade', props.unitNumber, { min: 1, max: 20 }),
-      residentAccountId: requireText('conta do morador', props.residentAccountId, {
-        min: 1,
-        max: 64,
-      }),
+      residentId: requireText('morador', props.residentId, { min: 1, max: 64 }),
       startsAt,
       endsAt,
       costSnapshotCents,
@@ -134,8 +131,8 @@ export class Booking {
     return this.state.status;
   }
 
-  get residentAccountId(): string {
-    return this.state.residentAccountId;
+  get residentId(): string {
+    return this.state.residentId;
   }
 
   get startsAt(): Date {

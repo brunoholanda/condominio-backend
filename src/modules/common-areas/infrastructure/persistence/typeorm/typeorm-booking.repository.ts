@@ -49,9 +49,9 @@ export class TypeormBookingRepository extends BookingRepository {
     return rows.map((row) => BookingMapper.toDomain(row));
   }
 
-  async findManyByResidentAccount(residentAccountId: string): Promise<Booking[]> {
+  async findManyByResident(residentId: string): Promise<Booking[]> {
     const rows = await this.repository.find({
-      where: { residentAccountId },
+      where: { residentId },
       order: { startsAt: 'DESC' },
     });
 

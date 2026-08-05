@@ -16,7 +16,7 @@ export class BookingResponseDto {
   unitNumber: string;
 
   @ApiProperty({ format: 'uuid' })
-  residentAccountId: string;
+  residentId: string;
 
   @ApiProperty()
   startsAt: string;

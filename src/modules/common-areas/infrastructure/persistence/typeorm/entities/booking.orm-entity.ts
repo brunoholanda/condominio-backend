@@ -18,9 +18,9 @@ export class BookingOrmEntity {
   @Column({ name: 'unit_number', type: 'varchar', length: 20 })
   unitNumber: string;
 
-  @Index('idx_bookings_resident_account')
-  @Column({ name: 'resident_account_id', type: 'uuid' })
-  residentAccountId: string;
+  @Index('idx_bookings_resident')
+  @Column({ name: 'resident_id', type: 'uuid' })
+  residentId: string;
 
   @Column({ name: 'starts_at', type: 'timestamptz' })
   startsAt: Date;

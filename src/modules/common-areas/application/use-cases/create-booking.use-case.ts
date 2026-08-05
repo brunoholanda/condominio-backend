@@ -21,7 +21,7 @@ export class CreateBookingUseCase {
   async execute(
     input: CreateBookingDto,
     condominiumId: string,
-    residentAccountId: string,
+    residentId: string,
     unitNumber: string,
   ): Promise<BookingResponseDto> {
     const area = await this.getCommonArea.getOrFail(input.commonAreaId, condominiumId);
@@ -54,7 +54,7 @@ export class CreateBookingUseCase {
       commonAreaId: area.id,
       condominiumId,
       unitNumber,
-      residentAccountId,
+      residentId,
       startsAt,
       endsAt,
       costSnapshotCents: area.costCents,

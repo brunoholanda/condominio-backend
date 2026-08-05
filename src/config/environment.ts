@@ -184,6 +184,14 @@ export class EnvironmentVariables {
   @MinLength(32, { message: 'JWT_STAFF_SECRET deve ter no mínimo 32 caracteres.' })
   JWT_STAFF_SECRET?: string;
 
+  /**
+   * Segredo dos JWTs de sessão de reserva (CPF + OTP). Se omitido, deriva de JWT_SECRET.
+   */
+  @IsOptional()
+  @IsString()
+  @MinLength(32, { message: 'JWT_BOOKING_SECRET deve ter no mínimo 32 caracteres.' })
+  JWT_BOOKING_SECRET?: string;
+
   @Type(() => Number)
   @IsInt()
   @Min(60)
