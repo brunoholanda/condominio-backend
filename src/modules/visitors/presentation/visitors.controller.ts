@@ -39,6 +39,7 @@ const CREATE_LIST_ROLES = [
   MembershipRole.Owner,
   MembershipRole.Manager,
   MembershipRole.Operator,
+  MembershipRole.Doorman,
 ];
 
 const CANCEL_ROLES = [MembershipRole.Owner, MembershipRole.Manager];

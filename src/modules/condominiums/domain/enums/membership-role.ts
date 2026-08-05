@@ -6,7 +6,7 @@ export enum MembershipRole {
   Manager = 'MANAGER',
   /** Operates the residents registry only. */
   Operator = 'OPERATOR',
-  /** Registers packages at the lobby and protocols handovers with a signature. */
+  /** Portaria: encomendas e visitantes (cadastro e check-in). */
   Doorman = 'DOORMAN',
 }
 
