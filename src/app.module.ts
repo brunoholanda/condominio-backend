@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -24,6 +25,7 @@ import { ReceivablesModule } from './modules/receivables/receivables.module';
 import { StaffModule } from './modules/staff/staff.module';
 import { VisitorsModule } from './modules/visitors/visitors.module';
 import { WorkOrdersModule } from './modules/work-orders/work-orders.module';
+import { PrivacyModule } from './modules/privacy/privacy.module';
 import { CacheModule } from './shared/infrastructure/cache/cache.module';
 import { CryptoModule } from './shared/infrastructure/crypto/crypto.module';
 import { AuditAccessInterceptor } from './shared/infrastructure/http/audit-access.interceptor';
@@ -37,6 +39,7 @@ import { StorageModule } from './shared/infrastructure/storage/storage.module';
       cache: true,
       validate: validateEnvironment,
     }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60000, limit: 120 }]),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -64,6 +67,7 @@ import { StorageModule } from './shared/infrastructure/storage/storage.module';
     NotificationsModule,
     VisitorsModule,
     WorkOrdersModule,
+    PrivacyModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

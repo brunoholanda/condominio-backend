@@ -84,6 +84,10 @@ export class Document {
     return this.state.isPublic;
   }
 
+  get type(): DocumentType {
+    return this.state.type;
+  }
+
   get publishedAt(): Date | null {
     return this.state.publishedAt;
   }

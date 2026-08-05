@@ -21,6 +21,7 @@ import { DocumentResponseDto } from '../application/dto/document-response.dto';
 import { UpdateDocumentDto } from '../application/dto/update-document.dto';
 import { CreateDocumentUseCase } from '../application/use-cases/create-document.use-case';
 import { DeleteDocumentUseCase } from '../application/use-cases/delete-document.use-case';
+import { EnsureCondoDataInventoryUseCase } from '../application/use-cases/ensure-condo-data-inventory.use-case';
 import { GetDocumentUseCase } from '../application/use-cases/get-document.use-case';
 import { ListDocumentsUseCase } from '../application/use-cases/list-documents.use-case';
 import { UpdateDocumentUseCase } from '../application/use-cases/update-document.use-case';
@@ -39,6 +40,7 @@ export class DocumentsController {
     private readonly getDocument: GetDocumentUseCase,
     private readonly updateDocument: UpdateDocumentUseCase,
     private readonly deleteDocument: DeleteDocumentUseCase,
+    private readonly ensureDataInventory: EnsureCondoDataInventoryUseCase,
   ) {}
 
   @Post()
@@ -50,6 +52,16 @@ export class DocumentsController {
     @CurrentUser() user: AccessTokenPayload,
   ): Promise<DocumentResponseDto> {
     return this.createDocument.execute(body, condominiumId, user.sub);
+  }
+
+  @Post('data-inventory/sync')
+  @ApiOperation({ summary: 'Cria ou atualiza o inventário de dados pessoais (LGPD)' })
+  @ApiResponse({ status: 201, type: DocumentResponseDto })
+  syncDataInventory(
+    @Param('condominiumId', ParseUUIDPipe) condominiumId: string,
+    @CurrentUser() user: AccessTokenPayload,
+  ): Promise<DocumentResponseDto> {
+    return this.ensureDataInventory.execute(condominiumId, user.sub);
   }
 
   @Get()

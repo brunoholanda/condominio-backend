@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CondominiumsModule } from '../condominiums/condominiums.module';
 import { CreateDocumentUseCase } from './application/use-cases/create-document.use-case';
 import { DeleteDocumentUseCase } from './application/use-cases/delete-document.use-case';
+import { EnsureCondoDataInventoryUseCase } from './application/use-cases/ensure-condo-data-inventory.use-case';
 import { GetDocumentUseCase } from './application/use-cases/get-document.use-case';
 import { ListDocumentsUseCase } from './application/use-cases/list-documents.use-case';
 import { UpdateDocumentUseCase } from './application/use-cases/update-document.use-case';
@@ -23,6 +24,8 @@ import { PublicDocumentsController } from './presentation/public-documents.contr
     GetDocumentUseCase,
     UpdateDocumentUseCase,
     DeleteDocumentUseCase,
+    EnsureCondoDataInventoryUseCase,
   ],
+  exports: [EnsureCondoDataInventoryUseCase],
 })
 export class DocumentsModule {}

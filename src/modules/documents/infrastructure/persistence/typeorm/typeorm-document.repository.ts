@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import type { Document } from '../../../domain/entities/document';
+import { DocumentType } from '../../../domain/enums/document-type';
 import { DocumentRepository } from '../../../domain/repositories/document.repository';
 import { DocumentOrmEntity } from './entities/document.orm-entity';
 import { DocumentMapper } from './document.mapper';
@@ -41,6 +42,15 @@ export class TypeormDocumentRepository extends DocumentRepository {
     });
 
     return rows.map((row) => DocumentMapper.toDomain(row));
+  }
+
+  async findByCondoAndType(
+    condominiumId: string,
+    type: DocumentType,
+  ): Promise<Document | null> {
+    const row = await this.repository.findOne({ where: { condominiumId, type } });
+
+    return row ? DocumentMapper.toDomain(row) : null;
   }
 
   async delete(id: string, condominiumId: string): Promise<void> {

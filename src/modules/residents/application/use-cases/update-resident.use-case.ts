@@ -7,6 +7,7 @@ import { Unit } from '../../domain/value-objects/unit';
 import type { ResidentResponseDto } from '../dto/resident-response.dto';
 import type { UpdateResidentDto } from '../dto/update-resident.dto';
 import { ResidentPresenter } from '../presenters/resident.presenter';
+import { ArchiveFormerResidentUseCase } from './archive-former-resident.use-case';
 import { FindResidentByIdUseCase } from './find-resident-by-id.use-case';
 
 @Injectable()
@@ -14,12 +15,14 @@ export class UpdateResidentUseCase {
   constructor(
     private readonly residents: ResidentRepository,
     private readonly findResident: FindResidentByIdUseCase,
+    private readonly archiveFormer: ArchiveFormerResidentUseCase,
   ) {}
 
   async execute(
     id: string,
     input: UpdateResidentDto,
     condominiumId: string,
+    actorUserId: string | null,
   ): Promise<ResidentResponseDto> {
     const current = await this.findResident.getOrFail(id, condominiumId);
     const cpf = Cpf.create(input.cpf);
@@ -36,6 +39,12 @@ export class UpdateResidentUseCase {
 
     if (ownerOfUnit && ownerOfUnit !== id) {
       throw new ResourceConflictError(`A unidade ${unit.value} já pertence a outro cadastro.`);
+    }
+
+    const titularChanged = current.cpf.value !== cpf.value;
+
+    if (titularChanged) {
+      await this.archiveFormer.execute(current, 'UPDATE', actorUserId);
     }
 
     const updated = await this.residents.save(current.withData({ ...input, condominiumId }));

@@ -142,8 +142,9 @@ export class ResidentsController {
     @Param('condominiumId', ParseUUIDPipe) condominiumId: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateResidentDto,
+    @CurrentUser() user: AccessTokenPayload,
   ): Promise<ResidentResponseDto> {
-    return this.updateResident.execute(id, body, condominiumId);
+    return this.updateResident.execute(id, body, condominiumId, user.sub);
   }
 
   @Delete(':id')
@@ -154,7 +155,8 @@ export class ResidentsController {
   remove(
     @Param('condominiumId', ParseUUIDPipe) condominiumId: string,
     @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AccessTokenPayload,
   ): Promise<void> {
-    return this.deleteResident.execute(id, condominiumId);
+    return this.deleteResident.execute(id, condominiumId, user.sub);
   }
 }

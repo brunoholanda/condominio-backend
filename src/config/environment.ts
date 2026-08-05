@@ -205,6 +205,14 @@ export class EnvironmentVariables {
   @Max(3650)
   PUNCH_SELFIE_RETENTION_DAYS: number = 90;
 
+  /** Dias de retenção do histórico de moradores anteriores (LGPD). Default: 5 anos. */
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(365)
+  @Max(3650)
+  FORMER_RESIDENT_RETENTION_DAYS: number = 1825;
+
   @IsString()
   SMTP_HOST: string;
 

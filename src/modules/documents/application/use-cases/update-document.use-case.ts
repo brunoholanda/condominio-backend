@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
+import { BusinessRuleError } from '../../../../shared/domain/domain-error';
+import { DocumentType } from '../../domain/enums/document-type';
 import { DocumentRepository } from '../../domain/repositories/document.repository';
 import type { DocumentResponseDto } from '../dto/document-response.dto';
 import type { UpdateDocumentDto } from '../dto/update-document.dto';
@@ -19,6 +21,13 @@ export class UpdateDocumentUseCase {
     condominiumId: string,
   ): Promise<DocumentResponseDto> {
     const current = await this.getDocument.getOrFail(id, condominiumId);
+
+    if (current.type === DocumentType.DataInventory || input.type === DocumentType.DataInventory) {
+      throw new BusinessRuleError(
+        'O inventário LGPD só pode ser atualizado pelo sync automático.',
+      );
+    }
+
     const snapshot = current.toSnapshot();
     const updated = await this.documents.save(
       current.withData({
