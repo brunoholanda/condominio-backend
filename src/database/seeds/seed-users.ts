@@ -19,6 +19,7 @@ import { MembershipOrmEntity } from '../../modules/condominiums/infrastructure/p
 import { TypeormCondominiumRepository } from '../../modules/condominiums/infrastructure/persistence/typeorm/typeorm-condominium.repository';
 import { TypeormMembershipRepository } from '../../modules/condominiums/infrastructure/persistence/typeorm/typeorm-membership.repository';
 import { buildPortoImperialUnits } from '../../modules/residents/domain/value-objects/unit';
+import { MemoryCacheStore } from '../../shared/infrastructure/cache/memory-cache.store';
 import dataSource from '../data-source';
 
 const SALT_ROUNDS = 10;
@@ -254,9 +255,11 @@ async function seedUsers(): Promise<void> {
 
   try {
     const users = dataSource.getRepository(UserOrmEntity);
-    const condominiums = new TypeormCondominiumRepository(dataSource);
+    const cache = new MemoryCacheStore();
+    const condominiums = new TypeormCondominiumRepository(dataSource, cache);
     const memberships = new TypeormMembershipRepository(
       dataSource.getRepository(MembershipOrmEntity),
+      cache,
     );
 
     const condominium = await ensurePortoImperial(condominiums);

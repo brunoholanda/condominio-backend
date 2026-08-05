@@ -1,5 +1,6 @@
 import type { ConfigService } from '@nestjs/config';
 import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { join } from 'node:path';
 
 import type { EnvironmentVariables } from '../config/environment';
 
@@ -28,7 +29,10 @@ export function buildTypeOrmOptions(
     autoLoadEntities: true,
     // Schema changes always go through migrations, never through synchronize.
     synchronize: false,
-    migrationsRun: false,
+    // Resolve relative to this file so Nest (dist/) and the CLI (src/) both find them.
+    migrations: [join(__dirname, 'migrations', '*.{ts,js}')],
+    // Apply pending migrations on boot — avoids production deploys with schema lag.
+    migrationsRun: true,
   };
 }
 

@@ -24,6 +24,7 @@ import { ReceivablesModule } from './modules/receivables/receivables.module';
 import { StaffModule } from './modules/staff/staff.module';
 import { VisitorsModule } from './modules/visitors/visitors.module';
 import { WorkOrdersModule } from './modules/work-orders/work-orders.module';
+import { CacheModule } from './shared/infrastructure/cache/cache.module';
 import { CryptoModule } from './shared/infrastructure/crypto/crypto.module';
 import { AuditAccessInterceptor } from './shared/infrastructure/http/audit-access.interceptor';
 import { AuditModule } from './shared/infrastructure/http/audit.module';
@@ -42,6 +43,7 @@ import { StorageModule } from './shared/infrastructure/storage/storage.module';
       useFactory: (config: ConfigService<EnvironmentVariables, true>) =>
         typeOrmOptionsFromConfig(config),
     }),
+    CacheModule,
     CryptoModule,
     AuditModule,
     AuthModule,

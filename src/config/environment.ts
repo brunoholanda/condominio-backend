@@ -113,6 +113,42 @@ export class EnvironmentVariables {
   @IsBoolean()
   DATABASE_LOGGING: boolean = false;
 
+  /**
+   * Quando `false`, o app usa cache em memória do processo (útil em testes).
+   * Em produção / Docker, mantenha `true` e suba o serviço Redis.
+   */
+  @IsOptional()
+  @Transform(asBoolean)
+  @IsBoolean()
+  REDIS_ENABLED: boolean = true;
+
+  @IsOptional()
+  @IsString()
+  REDIS_HOST: string = 'localhost';
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  REDIS_PORT: number = 6379;
+
+  @IsOptional()
+  @IsString()
+  REDIS_PASSWORD: string = '';
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(15)
+  REDIS_DB: number = 0;
+
+  /** Prefixo de todas as chaves (ex.: `condogest:`). */
+  @IsOptional()
+  @IsString()
+  REDIS_KEY_PREFIX: string = 'condogest:';
+
   /** Endpoint S3-compatível do Cloudflare R2 (ex.: https://<accountid>.r2.cloudflarestorage.com). */
   @IsString()
   @MinLength(1)

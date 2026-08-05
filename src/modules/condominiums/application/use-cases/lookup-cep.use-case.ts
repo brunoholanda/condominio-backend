@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { BusinessRuleError, InvalidFieldError } from '../../../../shared/domain/domain-error';
+import { CacheStore } from '../../../../shared/application/ports/cache-store';
+import { CacheKeys } from '../../../../shared/infrastructure/cache/cache-keys';
+import { CacheTtl } from '../../../../shared/infrastructure/cache/cache-ttl';
 import type { GeocodeResultDto } from '../dto/geocode.dto';
 import { NominatimClient } from '../services/nominatim.client';
 
@@ -18,7 +21,10 @@ interface ViaCepResponse {
 export class LookupCepUseCase {
   private readonly logger = new Logger(LookupCepUseCase.name);
 
-  constructor(private readonly nominatim: NominatimClient) {}
+  constructor(
+    private readonly nominatim: NominatimClient,
+    private readonly cache: CacheStore,
+  ) {}
 
   async execute(rawCep: string): Promise<GeocodeResultDto> {
     const cep = rawCep.replace(/\D/g, '');
@@ -27,6 +33,10 @@ export class LookupCepUseCase {
       throw new InvalidFieldError('CEP', 'Informe um CEP válido com 8 dígitos.');
     }
 
+    return this.cache.getOrSet(CacheKeys.cep(cep), CacheTtl.cep, () => this.lookup(cep));
+  }
+
+  private async lookup(cep: string): Promise<GeocodeResultDto> {
     let viaCep: ViaCepResponse;
 
     try {

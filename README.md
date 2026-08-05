@@ -75,7 +75,8 @@ reaplica os vínculos.
 | `npm run build` | Compila |
 | `npm test` | Jest (domínio) |
 | `npm run lint` | ESLint + Prettier |
-| `npm run migration:run` | Aplica migrations |
+| `npm run migration:run` | Aplica migrations (dev / ts-node) |
+| `npm run migration:run:prod` | Aplica migrations a partir de `dist/` (após `npm run build`) |
 | `npm run seed` | Contas + demo condo |
 
 ## Estrutura

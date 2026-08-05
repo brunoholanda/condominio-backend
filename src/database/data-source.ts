@@ -1,4 +1,5 @@
 import { config as loadEnvFile } from 'dotenv';
+import { join } from 'node:path';
 import { DataSource, type DataSourceOptions } from 'typeorm';
 
 import { validateEnvironment } from '../config/environment';
@@ -11,6 +12,6 @@ const env = validateEnvironment(process.env);
 /** DataSource used exclusively by the TypeORM CLI (migrations). */
 export default new DataSource({
   ...(buildTypeOrmOptions(env) as DataSourceOptions),
-  entities: ['src/**/*.orm-entity.ts'],
-  migrations: ['src/database/migrations/*.ts'],
+  // Works for `ts-node` (src/) and compiled `dist/` CLI runs.
+  entities: [join(__dirname, '..', '**', '*.orm-entity.{ts,js}')],
 });
