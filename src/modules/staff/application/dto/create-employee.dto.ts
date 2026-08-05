@@ -185,13 +185,29 @@ export class CreateEmployeeDto {
   @Length(1, 120)
   pixKey?: string | null;
 
-  @ApiProperty({ description: 'PIN de 4 a 6 dígitos para o ponto eletrônico' })
+  @ApiPropertyOptional({ description: 'PIN de 4 a 6 dígitos (obrigatório se algum módulo estiver ligado)' })
+  @IsOptional()
   @IsString()
   @Matches(/^\d{4,6}$/)
-  pin: string;
+  pin?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({ default: true })
+  @IsOptional()
+  @IsBoolean()
+  canAccessTimeClock?: boolean;
+
+  @ApiPropertyOptional({ default: false })
+  @IsOptional()
+  @IsBoolean()
+  canAccessVisitors?: boolean;
+
+  @ApiPropertyOptional({ default: false })
+  @IsOptional()
+  @IsBoolean()
+  canAccessDeliveries?: boolean;
 }

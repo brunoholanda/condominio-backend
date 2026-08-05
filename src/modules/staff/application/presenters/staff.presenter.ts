@@ -42,6 +42,10 @@ export class EmployeePresenter {
       accountType: s.accountType,
       pixKey: s.pixKey,
       isActive: s.isActive,
+      canAccessTimeClock: s.canAccessTimeClock,
+      canAccessVisitors: s.canAccessVisitors,
+      canAccessDeliveries: s.canAccessDeliveries,
+      hasPin: Boolean(s.pinHash),
       createdAt: s.createdAt.toISOString(),
       updatedAt: s.updatedAt.toISOString(),
     };

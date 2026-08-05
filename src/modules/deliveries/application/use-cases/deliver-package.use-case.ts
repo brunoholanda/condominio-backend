@@ -32,4 +32,27 @@ export class DeliverPackageUseCase {
 
     return PackagePresenter.toResponse(delivered);
   }
+
+  async executeAsEmployee(
+    id: string,
+    condominiumId: string,
+    deliveredByEmployeeId: string,
+    input: DeliverPackageDto,
+  ): Promise<PackageResponseDto> {
+    const parcel = await this.packages.findById(id, condominiumId);
+
+    if (!parcel) {
+      throw new ResourceNotFoundError('Encomenda não encontrada.');
+    }
+
+    const delivered = await this.packages.save(
+      parcel.deliver({
+        recipientName: input.recipientName,
+        signature: input.signature,
+        deliveredByEmployeeId,
+      }),
+    );
+
+    return PackagePresenter.toResponse(delivered);
+  }
 }

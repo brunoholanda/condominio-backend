@@ -50,6 +50,21 @@ export class StaffMeResponseDto {
 
   @ApiProperty()
   geofenceRadiusMeters: number;
+
+  @ApiProperty()
+  canAccessTimeClock: boolean;
+
+  @ApiProperty()
+  canAccessVisitors: boolean;
+
+  @ApiProperty()
+  canAccessDeliveries: boolean;
+
+  @ApiPropertyOptional({ nullable: true })
+  condominiumSlug?: string;
+
+  @ApiProperty({ type: [String] })
+  unitNumbers: string[];
 }
 
 export class ListPunchesQueryDto {

@@ -50,6 +50,9 @@ export class CondoEmployeeMapper {
       pixKey: row.pixKey,
       pinHash: row.pinHash,
       isActive: row.isActive,
+      canAccessTimeClock: row.canAccessTimeClock !== false,
+      canAccessVisitors: row.canAccessVisitors === true,
+      canAccessDeliveries: row.canAccessDeliveries === true,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };
@@ -92,6 +95,9 @@ export class CondoEmployeeMapper {
       pixKey: s.pixKey,
       pinHash: s.pinHash,
       isActive: s.isActive,
+      canAccessTimeClock: s.canAccessTimeClock,
+      canAccessVisitors: s.canAccessVisitors,
+      canAccessDeliveries: s.canAccessDeliveries,
     };
   }
 }

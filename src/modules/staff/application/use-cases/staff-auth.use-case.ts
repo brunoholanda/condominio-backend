@@ -99,21 +99,27 @@ export class StaffLoginUseCase {
 
   async execute(slug: string, input: StaffLoginDto): Promise<StaffLoginResponseDto> {
     const condo = await this.getBySlug.getOrFail(slug);
-
-    if (!condo.hasLocation()) {
-      throw new BusinessRuleError(
-        'O condomínio ainda não configurou a localização para o ponto eletrônico.',
-      );
-    }
-
     const cpf = Cpf.create(input.cpf);
     await this.lockouts.assertNotLocked(condo.id, cpf.value);
 
     const employee = await this.employees.findByCpf(cpf.value, condo.id);
 
-    if (!employee || !employee.isActive) {
+    if (!employee || !employee.isActive || !employee.pinHash) {
       await this.lockouts.registerFailure(condo.id, cpf.value);
       throw new AuthenticationError('CPF ou PIN inválidos.');
+    }
+
+    if (!employee.hasPortalAccess()) {
+      throw new BusinessRuleError(
+        'Este funcionário não tem módulos do portal liberados. Peça ao síndico para habilitar o acesso.',
+        'STAFF_NO_MODULES',
+      );
+    }
+
+    if (employee.canAccessTimeClock && !condo.hasLocation()) {
+      throw new BusinessRuleError(
+        'O condomínio ainda não configurou a localização para o ponto eletrônico.',
+      );
     }
 
     const ok = await this.passwordHasher.compare(input.pin, employee.pinHash);
@@ -173,6 +179,11 @@ export class StaffMeUseCase {
       lastPunchType: lastType,
       nextPunchType: nextPunchType(lastType),
       geofenceRadiusMeters: condo.geofenceRadiusMeters ?? 100,
+      canAccessTimeClock: employee.canAccessTimeClock,
+      canAccessVisitors: employee.canAccessVisitors,
+      canAccessDeliveries: employee.canAccessDeliveries,
+      condominiumSlug: condo.slug.value,
+      unitNumbers: condo.unitNumbers,
     };
   }
 }

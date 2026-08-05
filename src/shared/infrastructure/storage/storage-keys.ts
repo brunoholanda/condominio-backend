@@ -7,6 +7,8 @@
  *   condominiums/{condoId}/documents/{documentId}/{uuid}{ext}
  *   condominiums/{condoId}/signatures/residents/{residentId}.png
  *   condominiums/{condoId}/signatures/deliveries/{packageId}.png
+ *   condominiums/{condoId}/time-punches/{punchId}/selfie.jpg
+ *   condominiums/{condoId}/absences/{absenceId}/attachment/{uuid}{ext}
  */
 import { randomUUID } from 'node:crypto';
 import { extname } from 'node:path';

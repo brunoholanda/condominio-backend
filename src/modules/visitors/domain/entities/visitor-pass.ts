@@ -16,7 +16,8 @@ export interface VisitorPassProps {
   expectedAt: Date | string;
   expiresAt: Date | string;
   notes?: string | null;
-  createdByUserId: string;
+  createdByUserId?: string | null;
+  createdByEmployeeId?: string | null;
 }
 
 export interface VisitorPassSnapshot {
@@ -30,9 +31,11 @@ export interface VisitorPassSnapshot {
   expiresAt: Date;
   status: VisitorPassStatus;
   notes: string | null;
-  createdByUserId: string;
+  createdByUserId: string | null;
+  createdByEmployeeId: string | null;
   checkedInAt: Date | null;
   checkedInByUserId: string | null;
+  checkedInByEmployeeId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -52,6 +55,17 @@ export class VisitorPass {
       );
     }
 
+    const createdByUserId = props.createdByUserId
+      ? requireText('criador', props.createdByUserId, { min: 36, max: 36 })
+      : null;
+    const createdByEmployeeId = props.createdByEmployeeId
+      ? requireText('criador (funcionário)', props.createdByEmployeeId, { min: 36, max: 36 })
+      : null;
+
+    if (!createdByUserId && !createdByEmployeeId) {
+      throw new InvalidFieldError('criador', 'Informe quem registrou o visitante.');
+    }
+
     return new VisitorPass({
       id: randomUUID(),
       condominiumId: requireText('condomínio', props.condominiumId, { min: 36, max: 36 }),
@@ -63,9 +77,11 @@ export class VisitorPass {
       expiresAt,
       status: VisitorPassStatus.Pending,
       notes: optionalText('observações', props.notes ?? null, { max: 1000 }),
-      createdByUserId: requireText('criador', props.createdByUserId, { min: 36, max: 36 }),
+      createdByUserId,
+      createdByEmployeeId,
       checkedInAt: null,
       checkedInByUserId: null,
+      checkedInByEmployeeId: null,
       createdAt: now,
       updatedAt: now,
     });
@@ -78,18 +94,33 @@ export class VisitorPass {
     });
   }
 
-  checkIn(checkedInByUserId: string, at: Date = new Date()): VisitorPass {
+  checkIn(
+    actor: { userId?: string | null; employeeId?: string | null },
+    at: Date = new Date(),
+  ): VisitorPass {
     this.assertPending();
 
     if (this.state.expiresAt.getTime() < at.getTime()) {
       throw new BusinessRuleError('Este passe de visitante já expirou.');
     }
 
+    const checkedInByUserId = actor.userId
+      ? requireText('responsável', actor.userId, { min: 36, max: 36 })
+      : null;
+    const checkedInByEmployeeId = actor.employeeId
+      ? requireText('responsável (funcionário)', actor.employeeId, { min: 36, max: 36 })
+      : null;
+
+    if (!checkedInByUserId && !checkedInByEmployeeId) {
+      throw new InvalidFieldError('responsável', 'Informe quem registrou a entrada.');
+    }
+
     return new VisitorPass({
       ...this.state,
       status: VisitorPassStatus.CheckedIn,
       checkedInAt: at,
-      checkedInByUserId: requireText('responsável', checkedInByUserId, { min: 36, max: 36 }),
+      checkedInByUserId,
+      checkedInByEmployeeId,
       updatedAt: at,
     });
   }

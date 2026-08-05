@@ -42,14 +42,20 @@ export class VisitorPassOrmEntity {
   @Column({ name: 'notes', type: 'varchar', length: 1000, nullable: true })
   notes: string | null;
 
-  @Column({ name: 'created_by_user_id', type: 'uuid' })
-  createdByUserId: string;
+  @Column({ name: 'created_by_user_id', type: 'uuid', nullable: true })
+  createdByUserId: string | null;
+
+  @Column({ name: 'created_by_employee_id', type: 'uuid', nullable: true })
+  createdByEmployeeId: string | null;
 
   @Column({ name: 'checked_in_at', type: 'timestamptz', nullable: true })
   checkedInAt: Date | null;
 
   @Column({ name: 'checked_in_by_user_id', type: 'uuid', nullable: true })
   checkedInByUserId: string | null;
+
+  @Column({ name: 'checked_in_by_employee_id', type: 'uuid', nullable: true })
+  checkedInByEmployeeId: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { StorageModule } from '../../shared/infrastructure/storage/storage.module';
 import { AuthModule } from '../auth/auth.module';
 import { CondominiumsModule } from '../condominiums/condominiums.module';
+import { DeliveriesModule } from '../deliveries/deliveries.module';
+import { VisitorsModule } from '../visitors/visitors.module';
 import {
   CreateAbsenceUseCase,
   DeleteAbsenceUseCase,
@@ -51,12 +53,15 @@ import {
   PunchesAdminController,
 } from './presentation/employees.controller';
 import { PublicStaffController } from './presentation/public-staff.controller';
+import { StaffPortalController } from './presentation/staff-portal.controller';
 
 @Module({
   imports: [
     AuthModule,
     CondominiumsModule,
     StorageModule,
+    VisitorsModule,
+    DeliveriesModule,
     TypeOrmModule.forFeature([
       CondoEmployeeOrmEntity,
       TimePunchOrmEntity,
@@ -69,6 +74,7 @@ import { PublicStaffController } from './presentation/public-staff.controller';
     PunchesAdminController,
     AbsencesController,
     PublicStaffController,
+    StaffPortalController,
   ],
   providers: [
     { provide: CondoEmployeeRepository, useClass: TypeormCondoEmployeeRepository },

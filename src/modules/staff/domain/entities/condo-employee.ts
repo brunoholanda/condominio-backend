@@ -39,8 +39,11 @@ export interface CondoEmployeeProps {
   accountNumber?: string | null;
   accountType?: AccountType | string | null;
   pixKey?: string | null;
-  pinHash: string;
+  pinHash?: string | null;
   isActive?: boolean;
+  canAccessTimeClock?: boolean;
+  canAccessVisitors?: boolean;
+  canAccessDeliveries?: boolean;
 }
 
 export interface CondoEmployeeSnapshot {
@@ -73,8 +76,11 @@ export interface CondoEmployeeSnapshot {
   accountNumber: string | null;
   accountType: AccountType | null;
   pixKey: string | null;
-  pinHash: string;
+  pinHash: string | null;
   isActive: boolean;
+  canAccessTimeClock: boolean;
+  canAccessVisitors: boolean;
+  canAccessDeliveries: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -99,12 +105,14 @@ export class CondoEmployee {
     return new CondoEmployee({ ...snapshot });
   }
 
-  withData(props: Omit<CondoEmployeeProps, 'condominiumId' | 'pinHash'> & { pinHash?: string }): CondoEmployee {
+  withData(
+    props: Omit<CondoEmployeeProps, 'condominiumId' | 'pinHash'> & { pinHash?: string | null },
+  ): CondoEmployee {
     return new CondoEmployee({
       ...CondoEmployee.parse({
         ...props,
         condominiumId: this.state.condominiumId,
-        pinHash: props.pinHash ?? this.state.pinHash,
+        pinHash: props.pinHash !== undefined ? props.pinHash : this.state.pinHash,
       }),
       id: this.state.id,
       createdAt: this.state.createdAt,
@@ -112,12 +120,16 @@ export class CondoEmployee {
     });
   }
 
-  withPinHash(pinHash: string): CondoEmployee {
+  withPinHash(pinHash: string | null): CondoEmployee {
     return new CondoEmployee({
       ...this.state,
       pinHash,
       updatedAt: new Date(),
     });
+  }
+
+  hasPortalAccess(): boolean {
+    return this.state.canAccessTimeClock || this.state.canAccessVisitors || this.state.canAccessDeliveries;
   }
 
   private static parse(props: CondoEmployeeProps): Omit<CondoEmployeeState, 'id' | 'createdAt' | 'updatedAt'> {
@@ -132,6 +144,22 @@ export class CondoEmployee {
       accountTypeRaw === null || accountTypeRaw === undefined || accountTypeRaw === ''
         ? null
         : requireEnum('tipo de conta', accountTypeRaw, AccountType);
+
+    const canAccessTimeClock = props.canAccessTimeClock !== false;
+    const canAccessVisitors = props.canAccessVisitors === true;
+    const canAccessDeliveries = props.canAccessDeliveries === true;
+    const needsPortal =
+      canAccessTimeClock || canAccessVisitors || canAccessDeliveries;
+
+    let pinHash: string | null = props.pinHash ?? null;
+
+    if (needsPortal) {
+      pinHash = requireText('PIN', pinHash, { min: 20, max: 255 });
+    } else if (pinHash) {
+      pinHash = requireText('PIN', pinHash, { min: 20, max: 255 });
+    } else {
+      pinHash = null;
+    }
 
     return {
       condominiumId: requireText('condomínio', props.condominiumId, { min: 36, max: 36 }),
@@ -166,8 +194,11 @@ export class CondoEmployee {
       accountNumber: optionalText('conta', props.accountNumber, { max: 30 }),
       accountType,
       pixKey: optionalText('chave PIX', props.pixKey, { max: 120 }),
-      pinHash: requireText('PIN', props.pinHash, { min: 20, max: 255 }),
+      pinHash,
       isActive: props.isActive !== false,
+      canAccessTimeClock,
+      canAccessVisitors,
+      canAccessDeliveries,
     };
   }
 
@@ -217,7 +248,7 @@ export class CondoEmployee {
     return this.state.cpf;
   }
 
-  get pinHash(): string {
+  get pinHash(): string | null {
     return this.state.pinHash;
   }
 
@@ -231,6 +262,18 @@ export class CondoEmployee {
 
   get jobTitle(): string {
     return this.state.jobTitle;
+  }
+
+  get canAccessTimeClock(): boolean {
+    return this.state.canAccessTimeClock;
+  }
+
+  get canAccessVisitors(): boolean {
+    return this.state.canAccessVisitors;
+  }
+
+  get canAccessDeliveries(): boolean {
+    return this.state.canAccessDeliveries;
   }
 
   toSnapshot(): CondoEmployeeSnapshot {

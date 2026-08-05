@@ -58,6 +58,43 @@ export class CreateVisitorPassUseCase {
 
     return VisitorPassPresenter.toResponse(pass);
   }
+
+  async executeAsEmployee(
+    condominiumId: string,
+    createdByEmployeeId: string,
+    input: CreateVisitorPassDto,
+  ): Promise<VisitorPassResponseDto> {
+    const pass = await this.passes.save(
+      VisitorPass.create({
+        condominiumId,
+        visitorName: input.visitorName,
+        visitorDocument: input.visitorDocument,
+        hostName: input.hostName,
+        unitNumber: input.unitNumber,
+        expectedAt: input.expectedAt,
+        expiresAt: input.expiresAt,
+        notes: input.notes,
+        createdByEmployeeId,
+      }),
+    );
+
+    const managers = (await this.memberships.findManyByCondo(condominiumId)).filter((m) =>
+      m.hasAnyRole([MembershipRole.Owner, MembershipRole.Manager]),
+    );
+
+    await this.createNotification.executeMany(
+      managers.map((m) => ({
+        condominiumId,
+        userId: m.userId,
+        title: 'Novo visitante esperado',
+        body: `${input.visitorName} visita ${input.hostName}${input.unitNumber ? ` (unid. ${input.unitNumber})` : ''}.`,
+        category: NotificationCategory.Visitor,
+        linkPath: `/condominiums/${condominiumId}/visitors`,
+      })),
+    );
+
+    return VisitorPassPresenter.toResponse(pass);
+  }
 }
 
 @Injectable()
@@ -94,7 +131,23 @@ export class CheckInVisitorPassUseCase {
       throw new ResourceNotFoundError('Passe de visitante não encontrado.');
     }
 
-    const updated = await this.passes.save(current.checkIn(checkedInByUserId));
+    const updated = await this.passes.save(current.checkIn({ userId: checkedInByUserId }));
+
+    return VisitorPassPresenter.toResponse(updated);
+  }
+
+  async executeAsEmployee(
+    condominiumId: string,
+    passId: string,
+    checkedInByEmployeeId: string,
+  ): Promise<VisitorPassResponseDto> {
+    const current = await this.passes.findById(passId, condominiumId);
+
+    if (!current) {
+      throw new ResourceNotFoundError('Passe de visitante não encontrado.');
+    }
+
+    const updated = await this.passes.save(current.checkIn({ employeeId: checkedInByEmployeeId }));
 
     return VisitorPassPresenter.toResponse(updated);
   }

@@ -89,14 +89,20 @@ export class VisitorPassResponseDto {
   @ApiPropertyOptional({ nullable: true })
   notes: string | null;
 
-  @ApiProperty({ format: 'uuid' })
-  createdByUserId: string;
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  createdByUserId: string | null;
+
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  createdByEmployeeId: string | null;
 
   @ApiPropertyOptional({ nullable: true })
   checkedInAt: string | null;
 
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   checkedInByUserId: string | null;
+
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  checkedInByEmployeeId: string | null;
 
   @ApiProperty()
   createdAt: string;

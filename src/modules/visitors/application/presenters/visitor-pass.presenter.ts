@@ -17,8 +17,10 @@ export const VisitorPassPresenter = {
       status: s.status,
       notes: s.notes,
       createdByUserId: s.createdByUserId,
+      createdByEmployeeId: s.createdByEmployeeId,
       checkedInAt: s.checkedInAt?.toISOString() ?? null,
       checkedInByUserId: s.checkedInByUserId,
+      checkedInByEmployeeId: s.checkedInByEmployeeId,
       createdAt: s.createdAt.toISOString(),
       updatedAt: s.updatedAt.toISOString(),
     };

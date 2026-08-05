@@ -80,7 +80,7 @@ export class PublicStaffController {
   @Post('punches')
   @UseInterceptors(
     FileInterceptor('selfie', {
-      limits: { fileSize: 5 * 1024 * 1024 },
+      limits: { fileSize: 150 * 1024 },
     }),
   )
   @ApiConsumes('multipart/form-data')

@@ -34,14 +34,20 @@ export class PackageOrmEntity {
   @Column({ name: 'received_at', type: 'timestamptz' })
   receivedAt: Date;
 
-  @Column({ name: 'received_by_user_id', type: 'uuid' })
-  receivedByUserId: string;
+  @Column({ name: 'received_by_user_id', type: 'uuid', nullable: true })
+  receivedByUserId: string | null;
+
+  @Column({ name: 'received_by_employee_id', type: 'uuid', nullable: true })
+  receivedByEmployeeId: string | null;
 
   @Column({ name: 'delivered_at', type: 'timestamptz', nullable: true })
   deliveredAt: Date | null;
 
   @Column({ name: 'delivered_by_user_id', type: 'uuid', nullable: true })
   deliveredByUserId: string | null;
+
+  @Column({ name: 'delivered_by_employee_id', type: 'uuid', nullable: true })
+  deliveredByEmployeeId: string | null;
 
   @Column({ name: 'recipient_name', type: 'varchar', length: 150, nullable: true })
   recipientName: string | null;

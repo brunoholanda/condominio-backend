@@ -33,7 +33,8 @@ export interface UploadedSelfie {
 }
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
-const MAX_SELFIE_BYTES = 5 * 1024 * 1024;
+/** Alinhado ao cliente: selfie comprimida para caber no R2 com baixo custo. */
+const MAX_SELFIE_BYTES = 150 * 1024;
 
 @Injectable()
 export class RegisterPunchUseCase {
@@ -68,10 +69,17 @@ export class RegisterPunchUseCase {
       throw new ResourceNotFoundError('Funcionário não encontrado ou inativo.');
     }
 
+    if (!employee.canAccessTimeClock) {
+      throw new BusinessRuleError(
+        'Este funcionário não tem acesso ao ponto eletrônico.',
+        'STAFF_MODULE_DENIED',
+      );
+    }
+
     if (!ALLOWED_MIME.has(input.selfie.mimetype) || input.selfie.size > MAX_SELFIE_BYTES) {
       throw new InvalidFieldError(
         'selfie',
-        'Envie uma selfie JPEG/PNG/WebP de até 5 MB.',
+        'Envie uma selfie JPEG/PNG/WebP de até 150 KB.',
       );
     }
 
@@ -141,32 +149,31 @@ export class RegisterPunchUseCase {
       rejectedReason,
     });
 
-    if (within) {
-      const storageKey = StorageKeys.timePunchSelfie({
-        condominiumId: condo.id,
-        punchId: punch.id,
-        originalName: input.selfie.originalname || 'selfie.jpg',
-      });
+    const storageKey = StorageKeys.timePunchSelfie({
+      condominiumId: condo.id,
+      punchId: punch.id,
+      originalName: input.selfie.originalname || 'selfie.jpg',
+    });
 
-      await this.fileStorage.save(input.selfie.buffer, storageKey, input.selfie.mimetype);
+    // Sempre grava no Cloudflare R2 (aceita ou rejeitada) para auditoria da marcação.
+    await this.fileStorage.save(input.selfie.buffer, storageKey, input.selfie.mimetype);
 
-      const accepted = TimePunch.restore({
-        ...punch.toSnapshot(),
-        selfieStorageKey: storageKey,
-      });
+    const withSelfie = TimePunch.restore({
+      ...punch.toSnapshot(),
+      selfieStorageKey: storageKey,
+    });
 
-      await this.punches.save(accepted);
+    await this.punches.save(withSelfie);
 
-      return TimePunchPresenter.toResponse(accepted, employee.fullName);
+    if (!within) {
+      throw new BusinessRuleError(
+        rejectedReason ??
+          `Você está a ${Math.round(distance)} m do condomínio (raio permitido: ${radius} m). Aproxime-se para registrar o ponto.`,
+        accuracyOk ? 'GEOFENCE' : 'GPS_ACCURACY',
+      );
     }
 
-    await this.punches.save(punch);
-
-    throw new BusinessRuleError(
-      rejectedReason ??
-        `Você está a ${Math.round(distance)} m do condomínio (raio permitido: ${radius} m). Aproxime-se para registrar o ponto.`,
-      accuracyOk ? 'GEOFENCE' : 'GPS_ACCURACY',
-    );
+    return TimePunchPresenter.toResponse(withSelfie, employee.fullName);
   }
 }
 

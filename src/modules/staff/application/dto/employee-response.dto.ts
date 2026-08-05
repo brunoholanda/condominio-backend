@@ -95,6 +95,18 @@ export class EmployeeResponseDto {
   isActive: boolean;
 
   @ApiProperty()
+  canAccessTimeClock: boolean;
+
+  @ApiProperty()
+  canAccessVisitors: boolean;
+
+  @ApiProperty()
+  canAccessDeliveries: boolean;
+
+  @ApiProperty()
+  hasPin: boolean;
+
+  @ApiProperty()
   createdAt: string;
 
   @ApiProperty()

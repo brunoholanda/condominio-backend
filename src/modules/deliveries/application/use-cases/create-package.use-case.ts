@@ -40,4 +40,30 @@ export class CreatePackageUseCase {
 
     return PackagePresenter.toResponse(parcel);
   }
+
+  async executeAsEmployee(
+    input: CreatePackageDto,
+    condominiumId: string,
+    receivedByEmployeeId: string,
+  ): Promise<PackageResponseDto> {
+    const units = await this.listCondoUnits.byId(condominiumId);
+    const unitNumber = input.unitNumber.trim();
+
+    if (!units.includes(unitNumber)) {
+      throw new BusinessRuleError('Informe uma unidade existente neste condomínio.');
+    }
+
+    const parcel = await this.packages.save(
+      Package.create({
+        condominiumId,
+        unitNumber,
+        description: input.description,
+        carrier: input.carrier,
+        notes: input.notes,
+        receivedByEmployeeId,
+      }),
+    );
+
+    return PackagePresenter.toResponse(parcel);
+  }
 }

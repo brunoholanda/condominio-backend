@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import {
   BusinessRuleError,
+  InvalidFieldError,
   ResourceConflictError,
   ResourceNotFoundError,
 } from '../../../../shared/domain/domain-error';
@@ -39,8 +40,25 @@ export class CreateEmployeeUseCase {
       throw new ResourceConflictError('Já existe um funcionário com este CPF neste condomínio.');
     }
 
-    const pin = assertValidPin(input.pin);
-    const pinHash = await this.passwordHasher.hash(pin);
+    const canAccessTimeClock = input.canAccessTimeClock !== false;
+    const canAccessVisitors = input.canAccessVisitors === true;
+    const canAccessDeliveries = input.canAccessDeliveries === true;
+    const needsPortal = canAccessTimeClock || canAccessVisitors || canAccessDeliveries;
+
+    let pinHash: string | null = null;
+
+    if (needsPortal) {
+      if (!input.pin) {
+        throw new InvalidFieldError(
+          'PIN',
+          'Informe o PIN: ele é obrigatório quando há módulos do portal liberados.',
+        );
+      }
+
+      pinHash = await this.passwordHasher.hash(assertValidPin(input.pin));
+    } else if (input.pin) {
+      pinHash = await this.passwordHasher.hash(assertValidPin(input.pin));
+    }
 
     const employee = await this.employees.save(
       CondoEmployee.create({
@@ -48,6 +66,9 @@ export class CreateEmployeeUseCase {
         condominiumId,
         cpf: cpf.value,
         pinHash,
+        canAccessTimeClock,
+        canAccessVisitors,
+        canAccessDeliveries,
       }),
     );
 
@@ -77,10 +98,27 @@ export class UpdateEmployeeUseCase {
     }
 
     const snapshot = current.toSnapshot();
+    const canAccessTimeClock =
+      input.canAccessTimeClock !== undefined ? input.canAccessTimeClock : snapshot.canAccessTimeClock;
+    const canAccessVisitors =
+      input.canAccessVisitors !== undefined ? input.canAccessVisitors : snapshot.canAccessVisitors;
+    const canAccessDeliveries =
+      input.canAccessDeliveries !== undefined
+        ? input.canAccessDeliveries
+        : snapshot.canAccessDeliveries;
+    const needsPortal = canAccessTimeClock || canAccessVisitors || canAccessDeliveries;
+
     let pinHash = snapshot.pinHash;
 
     if (input.pin) {
       pinHash = await this.passwordHasher.hash(assertValidPin(input.pin));
+    }
+
+    if (needsPortal && !pinHash) {
+      throw new InvalidFieldError(
+        'PIN',
+        'Informe o PIN: ele é obrigatório quando há módulos do portal liberados.',
+      );
     }
 
     if (input.cpf) {
@@ -124,6 +162,9 @@ export class UpdateEmployeeUseCase {
       accountType: input.accountType !== undefined ? input.accountType : snapshot.accountType,
       pixKey: input.pixKey !== undefined ? input.pixKey : snapshot.pixKey,
       isActive: input.isActive !== undefined ? input.isActive : snapshot.isActive,
+      canAccessTimeClock,
+      canAccessVisitors,
+      canAccessDeliveries,
       pinHash,
     });
 

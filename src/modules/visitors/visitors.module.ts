@@ -28,5 +28,10 @@ import { VisitorsController } from './presentation/visitors.controller';
     CheckInVisitorPassUseCase,
     CancelVisitorPassUseCase,
   ],
+  exports: [
+    CreateVisitorPassUseCase,
+    ListVisitorPassesUseCase,
+    CheckInVisitorPassUseCase,
+  ],
 })
 export class VisitorsModule {}

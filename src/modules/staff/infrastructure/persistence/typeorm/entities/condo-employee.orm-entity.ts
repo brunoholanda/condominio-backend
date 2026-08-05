@@ -97,11 +97,20 @@ export class CondoEmployeeOrmEntity {
   @Column({ name: 'pix_key', type: 'varchar', length: 120, nullable: true })
   pixKey: string | null;
 
-  @Column({ name: 'pin_hash', type: 'varchar', length: 255 })
-  pinHash: string;
+  @Column({ name: 'pin_hash', type: 'varchar', length: 255, nullable: true })
+  pinHash: string | null;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
+
+  @Column({ name: 'can_access_time_clock', type: 'boolean', default: true })
+  canAccessTimeClock: boolean;
+
+  @Column({ name: 'can_access_visitors', type: 'boolean', default: false })
+  canAccessVisitors: boolean;
+
+  @Column({ name: 'can_access_deliveries', type: 'boolean', default: false })
+  canAccessDeliveries: boolean;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

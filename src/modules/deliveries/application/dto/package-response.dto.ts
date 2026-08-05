@@ -35,11 +35,17 @@ export class PackageResponseDto extends PackageListItemDto {
   @ApiProperty({ format: 'uuid' })
   condominiumId: string;
 
-  @ApiProperty({ format: 'uuid' })
-  receivedByUserId: string;
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  receivedByUserId: string | null;
+
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  receivedByEmployeeId: string | null;
 
   @ApiPropertyOptional({ nullable: true, format: 'uuid' })
   deliveredByUserId: string | null;
+
+  @ApiPropertyOptional({ nullable: true, format: 'uuid' })
+  deliveredByEmployeeId: string | null;
 
   @ApiPropertyOptional({
     nullable: true,

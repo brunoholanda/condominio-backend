@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { BusinessRuleError } from '../../../../shared/domain/domain-error';
+import { BusinessRuleError, InvalidFieldError } from '../../../../shared/domain/domain-error';
 import { optionalText, requireEnum, requireText } from '../../../../shared/domain/guards';
 import { SignatureImage } from '../../../../shared/domain/value-objects/signature-image';
 import { PackageStatus } from '../enums/package-status';
@@ -11,13 +11,15 @@ export interface PackageProps {
   description: string;
   carrier?: string | null;
   notes?: string | null;
-  receivedByUserId: string;
+  receivedByUserId?: string | null;
+  receivedByEmployeeId?: string | null;
 }
 
 export interface DeliverPackageProps {
   recipientName: string;
   signature: string;
-  deliveredByUserId: string;
+  deliveredByUserId?: string | null;
+  deliveredByEmployeeId?: string | null;
 }
 
 export interface PackageSnapshot {
@@ -28,9 +30,11 @@ export interface PackageSnapshot {
   carrier: string | null;
   status: PackageStatus;
   receivedAt: Date;
-  receivedByUserId: string;
+  receivedByUserId: string | null;
+  receivedByEmployeeId: string | null;
   deliveredAt: Date | null;
   deliveredByUserId: string | null;
+  deliveredByEmployeeId: string | null;
   recipientName: string | null;
   signature: string | null;
   notes: string | null;
@@ -46,9 +50,11 @@ interface PackageState {
   carrier: string | null;
   status: PackageStatus;
   receivedAt: Date;
-  receivedByUserId: string;
+  receivedByUserId: string | null;
+  receivedByEmployeeId: string | null;
   deliveredAt: Date | null;
   deliveredByUserId: string | null;
+  deliveredByEmployeeId: string | null;
   recipientName: string | null;
   signature: SignatureImage | null;
   notes: string | null;
@@ -62,6 +68,16 @@ export class Package {
 
   static create(props: PackageProps): Package {
     const now = new Date();
+    const receivedByUserId = props.receivedByUserId
+      ? requireText('recebido por', props.receivedByUserId, { min: 1, max: 64 })
+      : null;
+    const receivedByEmployeeId = props.receivedByEmployeeId
+      ? requireText('recebido por (funcionário)', props.receivedByEmployeeId, { min: 36, max: 36 })
+      : null;
+
+    if (!receivedByUserId && !receivedByEmployeeId) {
+      throw new InvalidFieldError('recebido por', 'Informe quem registrou a encomenda.');
+    }
 
     return new Package({
       id: randomUUID(),
@@ -72,9 +88,11 @@ export class Package {
       notes: optionalText('observações', props.notes, { min: 1, max: 2000 }),
       status: PackageStatus.Waiting,
       receivedAt: now,
-      receivedByUserId: requireText('recebido por', props.receivedByUserId, { min: 1, max: 64 }),
+      receivedByUserId,
+      receivedByEmployeeId,
       deliveredAt: null,
       deliveredByUserId: null,
+      deliveredByEmployeeId: null,
       recipientName: null,
       signature: null,
       createdAt: now,
@@ -92,8 +110,10 @@ export class Package {
       status: requireEnum('status', snapshot.status, PackageStatus),
       receivedAt: snapshot.receivedAt,
       receivedByUserId: snapshot.receivedByUserId,
+      receivedByEmployeeId: snapshot.receivedByEmployeeId ?? null,
       deliveredAt: snapshot.deliveredAt,
       deliveredByUserId: snapshot.deliveredByUserId,
+      deliveredByEmployeeId: snapshot.deliveredByEmployeeId ?? null,
       recipientName: snapshot.recipientName,
       signature: snapshot.signature ? SignatureImage.create(snapshot.signature) : null,
       notes: snapshot.notes,
@@ -109,15 +129,26 @@ export class Package {
     }
 
     const now = new Date();
+    const deliveredByUserId = props.deliveredByUserId
+      ? requireText('entregue por', props.deliveredByUserId, { min: 1, max: 64 })
+      : null;
+    const deliveredByEmployeeId = props.deliveredByEmployeeId
+      ? requireText('entregue por (funcionário)', props.deliveredByEmployeeId, {
+          min: 36,
+          max: 36,
+        })
+      : null;
+
+    if (!deliveredByUserId && !deliveredByEmployeeId) {
+      throw new InvalidFieldError('entregue por', 'Informe quem protocolou a entrega.');
+    }
 
     return new Package({
       ...this.state,
       status: PackageStatus.Delivered,
       deliveredAt: now,
-      deliveredByUserId: requireText('entregue por', props.deliveredByUserId, {
-        min: 1,
-        max: 64,
-      }),
+      deliveredByUserId,
+      deliveredByEmployeeId,
       recipientName: requireText('nome de quem retirou', props.recipientName, {
         min: 3,
         max: 150,
@@ -153,8 +184,10 @@ export class Package {
       status: this.state.status,
       receivedAt: this.state.receivedAt,
       receivedByUserId: this.state.receivedByUserId,
+      receivedByEmployeeId: this.state.receivedByEmployeeId,
       deliveredAt: this.state.deliveredAt,
       deliveredByUserId: this.state.deliveredByUserId,
+      deliveredByEmployeeId: this.state.deliveredByEmployeeId,
       recipientName: this.state.recipientName,
       signature: this.state.signature?.value ?? null,
       notes: this.state.notes,

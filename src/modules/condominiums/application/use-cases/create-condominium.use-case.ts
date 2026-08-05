@@ -36,12 +36,21 @@ export class CreateCondominiumUseCase {
       throw new ResourceNotFoundError('Conta não encontrada.');
     }
 
-    if (!actor.isSystemOwner && isLimitedCondoPlan(actor.plan)) {
-      const owned = (await this.memberships.findManyByUser(userId)).filter(
-        (membership) => membership.role === MembershipRole.Owner,
-      );
+    const memberships = await this.memberships.findManyByUser(userId);
+    const ownsCondo = memberships.some((membership) => membership.role === MembershipRole.Owner);
+    const isDoorman = memberships.some(
+      (membership) => membership.role === MembershipRole.Doorman,
+    );
 
-      if (owned.length >= 1) {
+    if (!actor.isSystemOwner && isDoorman && !ownsCondo) {
+      throw new BusinessRuleError(
+        'Contas de porteiro não podem criar condomínios.',
+        'DOORMAN_CANNOT_CREATE_CONDO',
+      );
+    }
+
+    if (!actor.isSystemOwner && isLimitedCondoPlan(actor.plan)) {
+      if (ownsCondo) {
         throw new BusinessRuleError(
           'Seu plano permite apenas 1 condomínio. Faça upgrade para o plano Gestor para gerenciar vários prédios.',
           'PLAN_CONDO_LIMIT',

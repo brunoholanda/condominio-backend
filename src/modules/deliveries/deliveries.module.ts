@@ -35,5 +35,11 @@ import { PublicDeliverySignController } from './presentation/public-delivery-sig
     GetPublicSigningSessionUseCase,
     CompletePublicSigningUseCase,
   ],
+  exports: [
+    CreatePackageUseCase,
+    ListPackagesUseCase,
+    DeliverPackageUseCase,
+    CreateSigningSessionUseCase,
+  ],
 })
 export class DeliveriesModule {}

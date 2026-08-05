@@ -17,8 +17,10 @@ export const VisitorPassMapper = {
       status: row.status,
       notes: row.notes,
       createdByUserId: row.createdByUserId,
+      createdByEmployeeId: row.createdByEmployeeId ?? null,
       checkedInAt: row.checkedInAt,
       checkedInByUserId: row.checkedInByUserId,
+      checkedInByEmployeeId: row.checkedInByEmployeeId ?? null,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });
@@ -39,8 +41,10 @@ export const VisitorPassMapper = {
       status: s.status,
       notes: s.notes,
       createdByUserId: s.createdByUserId,
+      createdByEmployeeId: s.createdByEmployeeId,
       checkedInAt: s.checkedInAt,
       checkedInByUserId: s.checkedInByUserId,
+      checkedInByEmployeeId: s.checkedInByEmployeeId,
       createdAt: s.createdAt,
       updatedAt: s.updatedAt,
     };
